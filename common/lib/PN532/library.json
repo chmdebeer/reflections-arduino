@@ -1,0 +1,12 @@
+{
+    "name": "PN532",
+    "description": "PN532",
+    "keywords": "PN532",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/elechouse/PN532"
+    },
+    "version": "1.0.0",
+    "homepage": "https://github.com/elechouse/PN532",
+    "frameworks": "Arduino"
+}

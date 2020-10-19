@@ -1,0 +1,169 @@
+#include <stdio.h>
+#include <Arduino.h>
+
+#include <Wire.h>
+#include <Adafruit_RGBLCDShield.h>
+#include <Adafruit_MCP23017.h>
+#include <LiquidMenu.h>
+
+#include "boatdata.h"
+#include "display.h"
+
+enum FunctionTypes {
+	INCREASE = 1,
+	DECREASE = 2,
+  SELECT = 3,
+};
+
+Adafruit_RGBLCDShield lcd = Adafruit_RGBLCDShield();
+
+char enginesRpm[17] = "rpm";
+char enginesTemp[17] = "temp";
+char enginesOil[17] = "oil";
+char batteries[17] = "batteries";
+double fuelLevel = 0.0;
+
+char* p_enginesRpm = (char *)enginesRpm;
+char* p_enginesTemp = (char *)enginesTemp;
+char* p_enginesOil = (char *)enginesOil;
+char* p_batteries = (char *)batteries;
+
+LiquidLine enginesRPMLine(0, 0, p_enginesRpm);
+LiquidLine enginesTempLine(0, 1, p_enginesTemp);
+LiquidLine enginesOilLine(0, 1, p_enginesOil);
+LiquidLine batteriesLine(0, 1, p_batteries);
+LiquidLine fuelLevelLine(0, 1, "Fuel: ", boatData.fuel.level, "%");
+//                                     "123456789012345<"
+LiquidLine portIgnitionLine(0, 0,      "Ignition-p:   ", boatData.switches.portIgnition);
+LiquidLine starboardIgnitionLine(0, 1, "Ignition-s:   ", boatData.switches.starboardIgnition);
+LiquidLine portStartLine(0, 1,         "Start-p:      ", boatData.switches.portStart);
+LiquidLine starboardStartLine(0, 1,    "Start-s:      ", boatData.switches.starboardStart);
+
+LiquidScreen enginesTempScreen(enginesRPMLine, enginesTempLine);
+LiquidScreen enginesOilScreen(enginesRPMLine, enginesOilLine);
+LiquidScreen batteriesScreen(enginesRPMLine, batteriesLine);
+LiquidScreen fuelLevelScreen(enginesRPMLine, fuelLevelLine);
+LiquidScreen switchesScreen;
+
+int analogReading_1 = 1000;
+int analogReading_2 = 2000;
+
+LiquidMenu menu(lcd);
+
+void blankFunction() {
+    return;
+}
+
+void focusNext() {
+  menu.switch_focus(true);
+}
+
+void focusPrevious() {
+  menu.switch_focus(false);
+}
+
+void setupDisplay() {
+  lcd.begin(16, 2);
+  lcd.setBacklight(LCD_WHITE);
+
+  // blink_line.attach_function(1, blink_switch);
+  // blink_line.attach_function(2, blink_switch);
+  portIgnitionLine.attach_function(INCREASE, focusPrevious);
+  portIgnitionLine.attach_function(DECREASE, focusNext);
+  portIgnitionLine.attach_function(SELECT, togglePortIgnition);
+
+  starboardIgnitionLine.attach_function(INCREASE, focusPrevious);
+  starboardIgnitionLine.attach_function(DECREASE, focusNext);
+
+  portStartLine.attach_function(INCREASE, focusPrevious);
+  portStartLine.attach_function(DECREASE, focusNext);
+
+  starboardStartLine.attach_function(INCREASE, focusPrevious);
+  starboardStartLine.attach_function(DECREASE, focusNext);
+
+  switchesScreen.add_line(portIgnitionLine);
+  switchesScreen.add_line(starboardIgnitionLine);
+  switchesScreen.add_line(portStartLine);
+  switchesScreen.add_line(starboardStartLine);
+  switchesScreen.set_displayLineCount(2);
+
+  menu.add_screen(enginesTempScreen);
+  menu.add_screen(enginesOilScreen);
+  menu.add_screen(batteriesScreen);
+  menu.add_screen(fuelLevelScreen);
+  menu.add_screen(switchesScreen);
+
+  lcd.setBacklight(LCD_WHITE);
+  menu.update();
+}
+
+void loopDisplay() {
+  static uint8_t buttonsOld;
+  uint8_t buttons = lcd.readButtons();
+  if (buttonsOld != buttons) {
+    if (buttons) {
+      Serial.println(enginesTemp);
+      if (buttons & BUTTON_UP) {
+        menu.call_function(INCREASE);
+      }
+      if (buttons & BUTTON_DOWN) {
+        menu.call_function(DECREASE);
+      }
+      if (buttons & BUTTON_LEFT) {
+        Serial.println("LEFT button pressed");
+        menu.previous_screen();
+        if (menu.get_currentScreen() == &switchesScreen) {
+          menu.switch_focus(true);
+        }
+      }
+      if (buttons & BUTTON_RIGHT) {
+        Serial.println("RIGHT button pressed");
+        menu.next_screen();
+        if (menu.get_currentScreen() == &switchesScreen) {
+          menu.switch_focus(true);
+        }
+      }
+      if (buttons & BUTTON_SELECT) {
+        menu.call_function(SELECT);
+      }
+      menu.update();
+    }
+    buttonsOld = buttons;
+  }
+}
+
+void updateDisplay() {
+  menu.update();
+}
+
+void updateEnginesRpm (int engineRpmPort, int engineRpmStarboard) {
+  sprintf(enginesRpm, " %4urpm %4urpm", engineRpmPort, engineRpmStarboard);
+  menu.update();
+}
+
+void updateEnginesTemperature (int engineTemperaturePort, int engineTemperatureStarboard) {
+  sprintf(enginesTemp, "  %3d'C   %3d'C", engineTemperaturePort, engineTemperatureStarboard);
+  menu.update();
+}
+
+void updateEnginesOil (int engineOilPort, int engineOilStarboard) {
+  sprintf(enginesOil, "  %3upsi  %3upsi", engineOilPort, engineOilStarboard);
+  menu.update();
+}
+
+void updateBattery (double portEngineBattery, double starboardEngineBattery, double auxiliaryBattery) {
+  char strTempA[7];
+  char strTempB[7];
+  char strTempC[7];
+
+  dtostrf(portEngineBattery, 4, 1, strTempA);
+  dtostrf(auxiliaryBattery, 4, 1, strTempB);
+  dtostrf(starboardEngineBattery, 4, 1, strTempC);
+  sprintf(batteries, "%s  %s  %s", strTempA, strTempB, strTempC);
+  menu.update();
+}
+
+void updateFuelLevel (double _fuelLevel) {
+  fuelLevel = _fuelLevel;
+  menu.update();
+}

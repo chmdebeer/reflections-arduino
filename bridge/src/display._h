@@ -1,0 +1,26 @@
+#ifndef DISPLAY_H
+#define DISPLAY_H
+
+#define LCD_RED 0x1
+#define LCD_YELLOW 0x3
+#define LCD_GREEN 0x2
+#define LCD_TEAL 0x6
+#define LCD_BLUE 0x4
+#define LCD_VIOLET 0x5
+#define LCD_WHITE 0x7
+
+extern char enginesRpm[17];
+extern char enginesTemp[17];
+extern char enginesOil[17];
+extern char batteries[17];
+
+void setupDisplay();
+void loopDisplay();
+void updateDisplay();
+void updateEnginesRpm (int engineRpmPort, int engineRpmStarboard);
+void updateEnginesTemperature (int engineTemperaturePort, int engineTemperatureStarboard);
+void updateFuelLevel (double _fuelLevel);
+void updateEnginesOil (int engineOilPort, int engineOilStarboard);
+void updateBattery (double portEngineBattery, double starboardEngineBattery, double auxiliaryBattery);
+
+#endif
