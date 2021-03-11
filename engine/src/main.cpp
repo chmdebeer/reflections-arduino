@@ -62,6 +62,8 @@ void loop() {
 
   if (newN2kBinaryStatus) {
     setIO(boatData);
+    Serial.println("new io");
+    Serial.println(boatData.utilities.cabinHeaterFan);
     newN2kBinaryStatus = false;
   }
 

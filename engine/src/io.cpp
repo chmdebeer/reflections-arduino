@@ -188,7 +188,7 @@ void readSensors(BoatData &boatData) {
   }
   boatData.engines.engineRoomTemperature = CToKelvin(value);
 
-  value = readAtd(I_FUEL, 120, 530, 100, 0, 1.0);
+  value = readAtd(I_FUEL, 275, 510, 100, 0, 1.0);
   if (value < 0) {
     value = 0;
   }

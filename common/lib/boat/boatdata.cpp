@@ -7,30 +7,6 @@
 void clearBoatData(BoatData &boatData) {
   memset(&boatData, 0, sizeof(BoatData));
 }
-/*
-boatData.fuel.level;
-boatData.fuel.capacity;
-
-boatData.engines.port.oilPressure;
-boatData.engines.port.waterTemperature;
-boatData.engines.port.rpm;
-boatData.engines.port.ignition;
-boatData.engines.port.start;
-
-boatData.engines.starboard.oilPressure;
-boatData.engines.starboard.waterTemperature;
-boatData.engines.starboard.rpm;
-boatData.engines.starboard.ignition;
-boatData.engines.starboard.start;
-
-boatData.tilt.angle
-
-
-boatData.batteries.port;
-boatData.batteries.starboard;
-boatData.batteries.auxiliary;
-
-*/
 
 uint64_t binaryStatusFromBoatData(unsigned char instance, BoatData boatData) {
   int offset = 1;
