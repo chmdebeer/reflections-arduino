@@ -8,9 +8,8 @@ void setupTimers();
 
 void handleNMEA2000Msg(const tN2kMsg &N2kMsg);
 void handleBinaryStatus(const tN2kMsg &N2kMsg);
+void handleAddressClaim(const tN2kMsg &N2kMsg);
 
-void readSensors();
+void newDevice();
 void sendN2kBinaryStatus();
 void sendN2kSensorData();
-void SendN2kEngineRPM();
-void readLock();

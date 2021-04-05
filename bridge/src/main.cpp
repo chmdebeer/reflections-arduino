@@ -25,10 +25,12 @@ tNMEA2000Handler NMEA2000Handlers[]={
   {127489L, &handleEngineDynamicParameters},
   {127501L, &handleBinaryStatus},
   {127505L, &handleFluidLevel},
+  {59904L, &handleAddressClaim},
   {0,0}
 };
 
 enum timers {
+  T_NEW_DEVICE,
   T_IGNITION_LED,
   T_GNSS,
   T_AC,
@@ -105,11 +107,14 @@ void setupNMEA() {
 }
 
 void setupTimers() {
+  timers[T_NEW_DEVICE].setInterval(12000, 1);
+  timers[T_NEW_DEVICE].setCallback(newDevice);
+
   timers[T_IGNITION_LED].setInterval(500);
   timers[T_IGNITION_LED].setCallback(blinkBridgeStartLed);
   //
-  timers[T_GNSS].setInterval(7003);
-  timers[T_GNSS].setCallback(sendN2kGNSS);
+  // timers[T_GNSS].setInterval(7003);
+  // timers[T_GNSS].setCallback(sendN2kGNSS);
 
   timers[T_AC].setInterval(10007);
   timers[T_AC].setCallback(sendN2kACStatus);
@@ -202,6 +207,14 @@ void handleFluidLevel(const tN2kMsg &N2kMsg) {
         newN2kServoStatus = true;
     }
   }
+}
+
+void handleAddressClaim(const tN2kMsg &N2kMsg) {
+  timers[T_NEW_DEVICE].start();
+}
+
+void newDevice() {
+  sendN2kBinaryStatus();
 }
 
 void sendN2kBinaryStatus() {

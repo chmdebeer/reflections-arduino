@@ -103,8 +103,8 @@ typedef struct {
   tN2kOnOff blackwaterAirPump;
   tN2kOnOff macerator;
   tN2kOnOff showerDrainPump;
-  tN2kOnOff radio;
-  tN2kOnOff stereo;
+  tN2kOnOff rocmRadio;
+  tN2kOnOff fmRadio;
   tN2kOnOff refrigerator;
   tN2kOnOff doorLock;
 } Utilities;

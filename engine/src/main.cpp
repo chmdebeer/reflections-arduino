@@ -22,10 +22,12 @@ BoatData boatData;
 
 tNMEA2000Handler NMEA2000Handlers[]={
   {127501L, &handleBinaryStatus},
+  {59904L, &handleAddressClaim},
   {0,0}
 };
 
 enum timers {
+  T_NEW_DEVICE,
   T_READ_SENSOR_DATA,
   T_SEND_SENSOR_DATA,
   T_ENGINE,
@@ -98,6 +100,9 @@ void setupNMEA() {
 }
 
 void setupTimers() {
+  timers[T_NEW_DEVICE].setInterval(11000, 1);
+  timers[T_NEW_DEVICE].setCallback(newDevice);
+
   timers[T_READ_SENSOR_DATA].setInterval(5007);
   timers[T_READ_SENSOR_DATA].setCallback(readSensors);
 
@@ -131,6 +136,14 @@ void handleBinaryStatus(const tN2kMsg &N2kMsg) {
     boatDataFromBinaryStatus(instance, binaryStatus, boatData);
     newN2kBinaryStatus = true;
   }
+}
+
+void handleAddressClaim(const tN2kMsg &N2kMsg) {
+  timers[T_NEW_DEVICE].start();
+}
+
+void newDevice() {
+  sendN2kBinaryStatus();
 }
 
 void sendN2kBinaryStatus() {

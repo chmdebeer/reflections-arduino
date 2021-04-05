@@ -11,11 +11,13 @@ void setupTimers();
 void blinkBridgeStartLed();
 
 void handleNMEA2000Msg(const tN2kMsg &N2kMsg);
+void handleBinaryStatus(const tN2kMsg &N2kMsg);
+void handleAddressClaim(const tN2kMsg &N2kMsg);
 void handleEngineRPM(const tN2kMsg &N2kMsg);
 void handleEngineDynamicParameters(const tN2kMsg &N2kMsg);
-void handleBinaryStatus(const tN2kMsg &N2kMsg);
 void handleFluidLevel(const tN2kMsg &N2kMsg);
 
+void newDevice();
 void sendN2kBinaryStatus();
 void sendN2kGNSS();
 void sendN2kACStatus();

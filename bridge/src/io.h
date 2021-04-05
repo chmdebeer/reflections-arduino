@@ -60,10 +60,10 @@
 #define I_ONE_WIRE_BUS 49
 
 #define I_HORN A15
-#define I_ACCESSORIES_RADIO A14
+#define I_ROCM_RADIO A14
 #define I_WINDOW_WIPERS A13
 #define I_CABIN_LIGHTS A12
-#define I_STEREO A11
+#define I_FM_RADIO A11
 #define I_WATER_PUMP A10
 #define I_REFRIGERATOR A9
 #define I_SPOT_LIGHT A8

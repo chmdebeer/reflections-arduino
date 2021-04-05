@@ -70,6 +70,7 @@ uint64_t binaryStatusFromBoatData(unsigned char instance, BoatData boatData) {
     N2kSetStatusBinaryOnStatus(binaryStatus, boatData.utilities.blackwaterAirPump, offset++);
     N2kSetStatusBinaryOnStatus(binaryStatus, boatData.utilities.macerator, offset++);
     N2kSetStatusBinaryOnStatus(binaryStatus, boatData.utilities.showerDrainPump, offset++);
+    N2kSetStatusBinaryOnStatus(binaryStatus, boatData.utilities.fmRadio, offset++);
 
   } else if (instance == 4) {
 
@@ -141,6 +142,7 @@ void boatDataFromBinaryStatus(unsigned char instance, uint64_t binaryStatus, Boa
     boatData.utilities.blackwaterAirPump = N2kGetStatusOnBinaryStatus(binaryStatus, offset++);
     boatData.utilities.macerator = N2kGetStatusOnBinaryStatus(binaryStatus, offset++);
     boatData.utilities.showerDrainPump = N2kGetStatusOnBinaryStatus(binaryStatus, offset++);
+    boatData.utilities.fmRadio = N2kGetStatusOnBinaryStatus(binaryStatus, offset++);
 
 
   } else if (instance == 4) {

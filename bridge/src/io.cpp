@@ -28,8 +28,8 @@ enum debounce {
   E_ENGINE_ROOM_LIGHTS,
   E_CABIN_LIGHTS,
   E_WATER_PUMP,
-  E_ACCESSORIES_RADIO,
-  E_STEREO,
+  E_ROCM_RADIO,
+  E_FM_RADIO,
   E_REFRIGERATOR,
   E_ITEMS
 };
@@ -74,8 +74,8 @@ void setupIO() {
   buttons[E_CABIN_LIGHTS].attach(I_CABIN_LIGHTS, INPUT_PULLUP);
 
   buttons[E_WATER_PUMP].attach(I_WATER_PUMP, INPUT_PULLUP);
-  buttons[E_ACCESSORIES_RADIO].attach(I_ACCESSORIES_RADIO, INPUT_PULLUP);
-  buttons[E_STEREO].attach(I_STEREO, INPUT_PULLUP);
+  buttons[E_ROCM_RADIO].attach(I_ROCM_RADIO, INPUT_PULLUP);
+  buttons[E_FM_RADIO].attach(I_FM_RADIO, INPUT_PULLUP);
   buttons[E_REFRIGERATOR].attach(I_REFRIGERATOR, INPUT_PULLUP);
   buttons[E_SPOT_LIGHT].attach(I_SPOT_LIGHT, INPUT_PULLUP);
 
@@ -223,8 +223,8 @@ bool readIO(BoatData &boatData) {
 
   newIO |= readToggleButton(buttons[E_WATER_PUMP], boatData.utilities.waterPump);
 
-  newIO |= readToggleButton(buttons[E_ACCESSORIES_RADIO], boatData.utilities.radio);
-  newIO |= readToggleButton(buttons[E_STEREO], boatData.utilities.stereo);
+  // newIO |= readToggleButton(buttons[E_ACCESSORIES_RADIO], boatData.utilities.radio);
+  newIO |= readToggleButton(buttons[E_FM_RADIO], boatData.utilities.fmRadio);
   newIO |= readToggleButton(buttons[E_REFRIGERATOR], boatData.utilities.refrigerator);
 
   return newIO;
@@ -239,7 +239,7 @@ void setIO(BoatData &boatData) {
   digitalWrite(O_NAVIGATION_LIGHTS, (boatData.lights.navigation == N2kOnOff_On));
   digitalWrite(O_ANCHOR_LIGHTS, (boatData.lights.anchor == N2kOnOff_On));
   digitalWrite(O_ENGINE_ROOM_LIGHTS, (boatData.lights.engineRoom == N2kOnOff_On));
-  digitalWrite(O_ACCESSORIES_RADIO, (boatData.utilities.radio == N2kOnOff_On));
+  // digitalWrite(O_ROCM_RADIO, (boatData.utilities.radio == N2kOnOff_On));
 
   digitalWrite(O_SERVOS, HIGH);
   digitalWrite(O_PORT_ENGINE_HOURS, HIGH);

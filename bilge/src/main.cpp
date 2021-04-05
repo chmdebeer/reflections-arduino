@@ -145,7 +145,7 @@ void sendN2kTemperature() {
   tN2kMsg N2kMsg;
 
   readSensors(boatData);
-  SetN2kTemperature(N2kMsg, 1, 1, N2kts_BaitWellTemperature, CToKelvin(boatData.environment.belowDeckTemperature));
+  SetN2kTemperature(N2kMsg, 1, 1, N2kts_InsideTemperature, CToKelvin(boatData.environment.belowDeckTemperature));
   NMEA2000.SendMsg(N2kMsg, DEV_TEMP);
 }
 
