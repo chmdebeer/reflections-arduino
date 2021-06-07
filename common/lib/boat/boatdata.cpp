@@ -6,6 +6,7 @@
 
 void clearBoatData(BoatData &boatData) {
   memset(&boatData, 0, sizeof(BoatData));
+  boatData.utilities.doorLock = N2kOnOff_On;
 }
 
 uint64_t binaryStatusFromBoatData(unsigned char instance, BoatData boatData) {

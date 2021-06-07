@@ -46,7 +46,6 @@ bool newN2kServoStatus = false;
 
 void setup() {
   Serial.begin(115200);
-  Serial3.begin(9600);
   clearBoatData(boatData);
   setIO(boatData);
   setupIO();
@@ -71,15 +70,6 @@ void loop() {
     printBoatData(boatData);
     newN2kBinaryStatus = false;
     newIoBinaryStatus = false;
-  }
-
-  // if (newN2kServoStatus) {
-  //   setServos(boatData);
-  //   newN2kServoStatus = false;
-  // }
-
-  while (Serial3.available()) {
-    gps.encode(Serial3.read());
   }
 
   TimerManager::instance().update();
@@ -112,9 +102,6 @@ void setupTimers() {
 
   timers[T_IGNITION_LED].setInterval(500);
   timers[T_IGNITION_LED].setCallback(blinkBridgeStartLed);
-  //
-  // timers[T_GNSS].setInterval(7003);
-  // timers[T_GNSS].setCallback(sendN2kGNSS);
 
   timers[T_AC].setInterval(10007);
   timers[T_AC].setCallback(sendN2kACStatus);
@@ -230,65 +217,6 @@ void sendN2kBinaryStatus() {
 
   binaryStatus_2 = binaryStatusFromBoatData(2, boatData);
   SetN2kBinaryStatus(N2kMsg, 2, binaryStatus_2);
-  NMEA2000.SendMsg(N2kMsg);
-
-}
-
-void sendN2kGNSS() {
-  tN2kMsg N2kMsg;
-  uint16_t daysSince1970;
-  double secondsSinceMidnight;
-  double latitude;
-  double longitude;
-  double altitude;
-  tN2kGNSStype gnssType;
-  tN2kGNSSmethod gnssMethod;
-  unsigned char nSatellites;
-  double hdop;
-  double pdop;
-  double geoidalSeparation;
-  unsigned char nReferenceStations;
-  tN2kGNSStype referenceStationType;
-  uint16_t referenceSationID;
-  double ageOfCorrection;
-
-  tmElements_t tm;
-  time_t currentTime;
-
-  if (!gps.date.isValid() || !gps.time.isValid() || !gps.altitude.isValid() || !gps.satellites.isValid())
-  {
-    Serial.println("GPS not ready");
-    return;
-  }
-
-  tm.Year = gps.date.year() - 1970;
-  tm.Month = gps.date.month();
-  tm.Day = gps.date.day();
-  tm.Hour = gps.time.hour();
-  tm.Minute = gps.time.minute();
-  tm.Second = gps.time.second();
-  currentTime = makeTime(tm);
-
-  daysSince1970 = elapsedDays(currentTime);
-  secondsSinceMidnight = elapsedSecsToday(currentTime);
-  latitude = gps.location.lat();
-  longitude = gps.location.lng();
-  altitude = gps.altitude.meters();
-  gnssType = N2kGNSSt_GPS;
-  gnssMethod = N2kGNSSm_GNSSfix;
-  nSatellites = gps.satellites.value();
-  hdop = gps.hdop.hdop();
-  pdop = 0.5;
-  geoidalSeparation = 15;
-  nReferenceStations = 1;
-  referenceStationType = N2kGNSSt_GPS;
-  referenceSationID = 15;
-  ageOfCorrection = 2;
-
-  SetN2kGNSS(N2kMsg, 1, daysSince1970, secondsSinceMidnight,
-    latitude, longitude, altitude,
-    gnssType, gnssMethod, nSatellites, hdop, pdop, geoidalSeparation,
-    nReferenceStations, referenceStationType, referenceSationID, ageOfCorrection);
   NMEA2000.SendMsg(N2kMsg);
 
 }

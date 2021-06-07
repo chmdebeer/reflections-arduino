@@ -18,7 +18,7 @@ void setup()
   Wire.onReceive(i2cReceive);
   Wire.onRequest(i2cRequest);
 
-  emon1.voltage(7, 429.4, 1.7);
+  emon1.voltage(7, 15750, 1.7);
   emon1.current(0, 44.2);
 }
 
@@ -26,7 +26,8 @@ void loop()
 {
   static int count = 0;
 
-  emon1.calcVI(60,1100);
+  emon1.calcVI(20,1100);
+  // emon1.serialprint();
 
   volts[count] = emon1.Vrms;
   current[count] = emon1.Irms;

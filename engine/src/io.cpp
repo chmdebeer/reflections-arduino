@@ -194,19 +194,19 @@ void readSensors(BoatData &boatData) {
   }
   boatData.fuel.level = value;
 
-  value = readAtd(I_PORT_BATTERY, 0, 755, 0, 2000, 100.0);
+  value = readAtd(I_PORT_BATTERY, 0, 720, 0, 2000, 100.0);
   if (value < 0) {
     value = 0;
   }
   boatData.batteries.port = value;
 
-  value = readAtd(I_STARBOARD_BATTERY, 0, 755, 0, 2000, 100.0);
+  value = readAtd(I_STARBOARD_BATTERY, 0, 726, 0, 2000, 100.0);
   if (value < 0) {
     value = 0;
   }
   boatData.batteries.starboard = value;
 
-  value = readAtd(I_AUX_BATTERY, 0, 750, 0, 2000, 100.0);
+  value = readAtd(I_AUX_BATTERY, 0, 722, 0, 2000, 100.0);
   if (value < 0) {
     value = 0;
   }

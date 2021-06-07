@@ -166,13 +166,17 @@ bool readIO(BoatData &boatData) {
     newIO |= true;
     if ((boatData.lights.navigation == N2kOnOff_Off) && (boatData.lights.anchor == N2kOnOff_Off)) {
       boatData.lights.navigation = N2kOnOff_On;
+      boatData.lights.instruments = N2kOnOff_On;
     } else if ((boatData.lights.navigation == N2kOnOff_On) && (boatData.lights.anchor == N2kOnOff_Off)) {
       boatData.lights.anchor = N2kOnOff_On;
+      boatData.lights.instruments = N2kOnOff_On;
     } else if ((boatData.lights.navigation == N2kOnOff_On) && (boatData.lights.anchor == N2kOnOff_On)) {
       boatData.lights.navigation = N2kOnOff_Off;
+      boatData.lights.instruments = N2kOnOff_On;
     } else {
       boatData.lights.navigation = N2kOnOff_Off;
       boatData.lights.anchor = N2kOnOff_Off;
+      boatData.lights.instruments = N2kOnOff_Off;
     }
   }
 

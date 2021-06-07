@@ -41,6 +41,7 @@ bool newBinaryStatus = false;
 
 void setup() {
   Serial.begin(115200);
+  Serial.println("Start-up");
   clearBoatData(boatData);
   setupTimers();
   setupNMEA();

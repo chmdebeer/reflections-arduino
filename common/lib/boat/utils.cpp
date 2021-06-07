@@ -156,6 +156,26 @@ void printBoatData(BoatData &boatData) {
   Serial.println(" |");
 
   Serial.println("+--------------------------------------------|");
+  Serial.println("|                Ignition                    |");
+  Serial.print("| Port ");
+  if (boatData.engines.port.ignition == N2kOnOff_On) {
+     Serial.print("On    ");
+     // digitalWrite(O_PORT_START, HIGH);
+  } else {
+     Serial.print("      ");
+     // digitalWrite(O_PORT_START, LOW);
+  }
+  Serial.print("      | Starboard        ");
+  if (boatData.engines.starboard.ignition == N2kOnOff_On) {
+    Serial.print("On    ");
+    // digitalWrite(O_STARBOARD_START, HIGH);
+  } else {
+    Serial.print("      ");
+    // digitalWrite(O_STARBOARD_START, LOW);
+  }
+  Serial.println(" |");
+
+  Serial.println("+--------------------------------------------|");
   Serial.println("|                Start                       |");
   Serial.print("| Port ");
   if (boatData.engines.port.start == N2kOnOff_On) {
@@ -216,6 +236,52 @@ void printBoatData(BoatData &boatData) {
 
   Serial.print(" | Right               ");
   if (boatData.lights.spotlight.right == N2kOnOff_On) {
+    Serial.print(" On");
+  } else {
+    Serial.print("Off");
+  }
+  Serial.println(" |");
+
+
+  Serial.println("+--------------------------------------------|");
+  Serial.println("|                Spotlight                   |");
+  Serial.print("| Eng Rm Lts:         ");
+  if (boatData.lights.engineRoom == N2kOnOff_On) {
+    Serial.print(" On");
+  } else {
+    Serial.print("Off");
+  }
+  Serial.println(" |");
+  Serial.print("| FM Radio:         ");
+  if (boatData.utilities.fmRadio == N2kOnOff_On) {
+    Serial.print(" On");
+  } else {
+    Serial.print("Off");
+  }
+  Serial.println(" |");
+  Serial.print("| Cabin Lights:         ");
+  if (boatData.lights.cabin == N2kOnOff_On) {
+    Serial.print(" On");
+  } else {
+    Serial.print("Off");
+  }
+  Serial.println(" |");
+  Serial.print("| Water:         ");
+  if (boatData.utilities.waterPump == N2kOnOff_On) {
+    Serial.print(" On");
+  } else {
+    Serial.print("Off");
+  }
+  Serial.println(" |");
+  Serial.print("| Spotlight Fog:         ");
+  if (boatData.lights.spotlight.fog == N2kOnOff_On) {
+    Serial.print(" On");
+  } else {
+    Serial.print("Off");
+  }
+  Serial.println(" |");
+  Serial.print("| Spotlight spot:         ");
+  if (boatData.lights.spotlight.spot == N2kOnOff_On) {
     Serial.print(" On");
   } else {
     Serial.print("Off");
