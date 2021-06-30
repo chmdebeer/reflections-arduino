@@ -19,5 +19,8 @@ void handleFluidLevel(const tN2kMsg &N2kMsg);
 
 void newDevice();
 void sendN2kBinaryStatus();
+void sendN2kSystemStatus();
 void sendN2kGNSS();
 void sendN2kACStatus();
+
+void readRestartCount();

@@ -56,6 +56,9 @@ typedef struct {
   tN2kOnOff navigation;
   Spotlight spotlight;
   tN2kOnOff stern;
+  unsigned char cabinIntensity;
+  unsigned char berthIntensity;
+  unsigned char headIntensity;
 } Lights;
 
 typedef struct {
@@ -126,6 +129,13 @@ typedef struct {
 } Environment;
 
 typedef struct {
+  unsigned int bridgeRestartCount;
+  unsigned int flybridgeRestartCount;
+  unsigned int egnineRoomRestartCount;
+  unsigned int bildgeRestartCount;
+} System;
+
+typedef struct {
   Fuel fuel;
   Engines engines;
   Trim tilt;
@@ -138,6 +148,7 @@ typedef struct {
   Attitude attitude;
   AC ac;
   Environment environment;
+  System system;
 } BoatData;
 
 void clearBoatData(BoatData &boatData);

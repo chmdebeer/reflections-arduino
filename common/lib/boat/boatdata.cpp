@@ -81,7 +81,6 @@ uint64_t binaryStatusFromBoatData(unsigned char instance, BoatData boatData) {
 
   }
 
-
   return binaryStatus;
 }
 

@@ -10,6 +10,8 @@
 
 OneWire oneWire(I_ONE_WIRE_BUS);
 
+Bounce doorLock = Bounce();
+
 DallasTemperature sensors(&oneWire);
 
 uint8_t engineRoomTemperatureSensorID[8] = { 0x28, 0xFF, 0x10, 0x05, 0x72, 0x17, 0x04, 0xF6 };
@@ -20,6 +22,8 @@ int portTilt[10] = {};
 int starboardTilt[10] = {};
 
 void setupIO() {
+
+  pinMode(I_DOOR_LOCK, INPUT_PULLUP);
 
   pinMode(O_RELAY_1, OUTPUT);
   pinMode(O_WATER_PUMP, OUTPUT);
@@ -66,6 +70,9 @@ void setupIO() {
   pinMode(I_PORT_DRIVE_TILT, INPUT);
   pinMode(I_STARBOARD_DRIVE_TILT, INPUT);
 
+  doorLock.attach(I_DOOR_LOCK);
+  doorLock.interval(25); // interval in ms
+
   sensors.begin();
 
 }
@@ -75,18 +82,28 @@ bool readIO(BoatData &boatData) {
   bool newIO = false;
   double value;
 
+  doorLock.update();
+  if (doorLock.fell()) {
+    newIO |= true;
+    if (boatData.utilities.doorLock == N2kOnOff_Off) {
+      boatData.utilities.doorLock = N2kOnOff_On;
+    } else {
+      boatData.utilities.doorLock = N2kOnOff_Off;
+    }
+  }
+
   value = analogRead(I_ENGINE_BILGE_PUMP);
   if (value > 200) {
     boatData.bilgePumps.engineRoom.floatSwitch = N2kOnOff_On;
     if (!bilgePumpOn) {
       bilgePumpOn = true;
-      newIO = true;
+      newIO |= true;
     }
   } else {
     boatData.bilgePumps.engineRoom.floatSwitch = N2kOnOff_Off;
     if (bilgePumpOn) {
       bilgePumpOn = false;
-      newIO = true;
+      newIO |= true;
     }
   }
 
@@ -193,6 +210,8 @@ void readSensors(BoatData &boatData) {
     value = 0;
   }
   boatData.fuel.level = value;
+  Serial.print("Fuel ");
+  Serial.println(boatData.fuel.level);
 
   value = readAtd(I_PORT_BATTERY, 0, 720, 0, 2000, 100.0);
   if (value < 0) {

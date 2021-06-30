@@ -4,6 +4,8 @@
 #define N2k_CAN_INT_PIN 2
 #define N2k_SPI_CS_PIN 48
 
+#define I_DOOR_LOCK 19
+
 #define I_PORT_ENGINE_RPM 20
 #define I_STARBOARD_ENGINE_RPM 21
 

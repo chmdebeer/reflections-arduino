@@ -13,6 +13,8 @@ void handleAddressClaim(const tN2kMsg &N2kMsg);
 void newDevice();
 void readSensors();
 void sendN2kBinaryStatus();
+void sendN2kSystemStatus();
 void sendN2kSensorData();
 void SendN2kEngineRPM();
-void readLock();
+
+void readRestartCount();

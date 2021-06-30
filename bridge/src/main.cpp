@@ -1,10 +1,12 @@
 #include <Arduino.h>
+#include <EEPROM.h>
 #include <N2kTypes.h>
 #include "boatdata.h"
 #include "io.h"
 
 #include <NMEA2000_CAN.h>  // This will automatically choose right CAN library and create suitable NMEA2000 object
 #include <N2kMessages.h>
+#include <N2kReflections.h>
 #include <N2kMsg.h>
 #include <NMEA2000.h>
 
@@ -34,6 +36,7 @@ enum timers {
   T_IGNITION_LED,
   T_GNSS,
   T_AC,
+  T_SYSTEM,
   T_ITEMS
 };
 
@@ -52,6 +55,7 @@ void setup() {
   setupAC();
   setupTimers();
   setupNMEA();
+  readRestartCount();
 }
 
 void loop() {
@@ -105,6 +109,9 @@ void setupTimers() {
 
   timers[T_AC].setInterval(10007);
   timers[T_AC].setCallback(sendN2kACStatus);
+
+  timers[T_SYSTEM].setInterval(20012);
+  timers[T_SYSTEM].setCallback(sendN2kSystemStatus);
 
   TimerManager::instance().start();
 }
@@ -221,6 +228,16 @@ void sendN2kBinaryStatus() {
 
 }
 
+void sendN2kSystemStatus() {
+  tN2kMsg N2kMsg;
+
+  Serial.print("Restart count ");
+  Serial.println(boatData.system.bridgeRestartCount);
+
+  SetN2kReflectionsResetCount(N2kMsg, 21, boatData.system.bridgeRestartCount);
+  NMEA2000.SendMsg(N2kMsg);
+}
+
 void sendN2kACStatus() {
   tN2kMsg N2kMsg;
 
@@ -228,4 +245,12 @@ void sendN2kACStatus() {
   SetN2kACStatus(N2kMsg, 1, 1, N2kACL_Line1, N2kACA_Good, boatData.ac.volts, boatData.ac.amps, 60.0, 25.0, 0.0, 0.0, 0.0);
   NMEA2000.SendMsg(N2kMsg);
 
+}
+
+void readRestartCount() {
+  EEPROM.get(0, boatData.system.bridgeRestartCount);
+  boatData.system.bridgeRestartCount++;
+
+ Serial.println(boatData.system.bridgeRestartCount);
+  EEPROM.put(0, boatData.system.bridgeRestartCount);
 }

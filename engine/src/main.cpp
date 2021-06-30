@@ -1,10 +1,12 @@
 #include <Arduino.h>
+#include <EEPROM.h>
 #include <N2kTypes.h>
 #include "boatdata.h"
 #include "io.h"
 
 #include <NMEA2000_CAN.h>  // This will automatically choose right CAN library and create suitable NMEA2000 object
 #include <N2kMessages.h>
+#include <N2kReflections.h>
 #include <N2kMsg.h>
 #include <NMEA2000.h>
 
@@ -16,7 +18,6 @@
 
 #include <frequency.h>
 #include "utils.h"
-#include <rfid.h>
 
 BoatData boatData;
 
@@ -31,14 +32,13 @@ enum timers {
   T_READ_SENSOR_DATA,
   T_SEND_SENSOR_DATA,
   T_ENGINE,
-  T_LOCK,
+  T_SYSTEM,
   T_ITEMS
 };
 
 Timer * timers = new Timer[T_ITEMS];
 
 bool newN2kBinaryStatus = false;
-bool newBinaryStatus = false;
 
 void setup() {
   Serial.begin(115200);
@@ -49,7 +49,8 @@ void setup() {
   setupNMEA();
 
   setupFrequency();
-  setupRFID();
+
+  readRestartCount();
 }
 
 void loop() {
@@ -57,9 +58,9 @@ void loop() {
 
   loopFrequency(boatData);
 
-  if (readIO(boatData) || newBinaryStatus) {
+  if (readIO(boatData)) {
     sendN2kBinaryStatus();
-    newBinaryStatus = false;
+    newN2kBinaryStatus = true;
   }
 
   if (newN2kBinaryStatus) {
@@ -112,8 +113,8 @@ void setupTimers() {
   timers[T_ENGINE].setInterval(2033);
   timers[T_ENGINE].setCallback(SendN2kEngineRPM);
 
-  timers[T_LOCK].setInterval(517);
-  timers[T_LOCK].setCallback(readLock);
+  timers[T_SYSTEM].setInterval(20011);
+  timers[T_SYSTEM].setCallback(sendN2kSystemStatus);
 
   TimerManager::instance().start();
 }
@@ -152,6 +153,16 @@ void sendN2kBinaryStatus() {
 
   binaryStatus = binaryStatusFromBoatData(4, boatData);
   SetN2kBinaryStatus(N2kMsg, 4, binaryStatus);
+  NMEA2000.SendMsg(N2kMsg);
+}
+
+void sendN2kSystemStatus() {
+  tN2kMsg N2kMsg;
+
+  Serial.print("Restart count ");
+  Serial.println(boatData.system.egnineRoomRestartCount);
+
+  SetN2kReflectionsResetCount(N2kMsg, 11, boatData.system.egnineRoomRestartCount);
   NMEA2000.SendMsg(N2kMsg);
 }
 
@@ -230,17 +241,8 @@ void SendN2kEngineRPM() {
   NMEA2000.SendMsg(N2kMsg_starboard);
 }
 
-void readLock() {
-
-  if (readRFID()) {
-    newBinaryStatus = true;
-    if (boatData.utilities.doorLock == N2kOnOff_On) {
-      boatData.utilities.doorLock = N2kOnOff_Off;
-      Serial.println("Lock Open");
-    } else {
-      boatData.utilities.doorLock = N2kOnOff_On;
-      Serial.println("Locked");
-    }
-    digitalWrite(O_DOOR_LOCK, boatData.utilities.doorLock == N2kOnOff_On);
-  }
+void readRestartCount() {
+  EEPROM.get(0, boatData.system.egnineRoomRestartCount);
+  boatData.system.egnineRoomRestartCount++;
+  EEPROM.put(0, boatData.system.egnineRoomRestartCount);
 }

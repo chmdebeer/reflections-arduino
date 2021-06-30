@@ -3,11 +3,13 @@
 
 
 #include <Arduino.h>
+#include <EEPROM.h>
 #include <N2kTypes.h>
 #include "boatdata.h"
 
 #include <NMEA2000_CAN.h>  // This will automatically choose right CAN library and create suitable NMEA2000 object
 #include <N2kMessages.h>
+#include <N2kReflections.h>
 #include <N2kMsg.h>
 #include <NMEA2000.h>
 
@@ -41,19 +43,23 @@ bool newBinaryStatus = false;
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("Start-up");
+  Serial.print("Start-up ");
   clearBoatData(boatData);
   setupTimers();
   setupNMEA();
-
+  readRestartCount();
+  // Serial.println(restartCount);
 }
 
 void loop() {
   NMEA2000.ParseMessages();
 
-    // sendN2kBinaryStatus();
+  sendN2kSystemStatus();
 
-  TimerManager::instance().update();
+    // sendN2kBinaryStatus();
+    delay(5000);
+
+  // TimerManager::instance().update();
 
   if ( Serial.available() ) { Serial.read(); }
 }
@@ -124,6 +130,7 @@ void sendN2kBinaryStatus() {
   tN2kBinaryStatus binaryStatus_2;
   tN2kBinaryStatus binaryStatus_3;
   tN2kBinaryStatus binaryStatus_4;
+  tN2kBinaryStatus binaryStatus_11;
 
   binaryStatus_1 = binaryStatusFromBoatData(1, boatData);
   SetN2kBinaryStatus(N2kMsg, 1, binaryStatus_1);
@@ -146,7 +153,26 @@ void sendN2kBinaryStatus() {
   binaryStatus_4 = binaryStatusFromBoatData(4, boatData);
   SetN2kBinaryStatus(N2kMsg, 4, binaryStatus_4);
   NMEA2000.SendMsg(N2kMsg);
+
+  delay(N2K_DELAY_BETWEEN_SEND);
+
+  boatData.system.egnineRoomRestartCount = 4000;
+
+  binaryStatus_11 = binaryStatusFromBoatData(11, boatData);
+  SetN2kBinaryStatus(N2kMsg, 11, binaryStatus_11);
+  NMEA2000.SendMsg(N2kMsg);
 }
+
+void sendN2kSystemStatus() {
+  tN2kMsg N2kMsg;
+
+  Serial.print("Restart count ");
+  Serial.println(boatData.system.egnineRoomRestartCount);
+
+  SetN2kReflectionsResetCount(N2kMsg, 11, boatData.system.egnineRoomRestartCount);
+  NMEA2000.SendMsg(N2kMsg);
+}
+
 
 void sendN2kSensorData() {
   static int sensorIndex = 0;
@@ -251,4 +277,10 @@ void sendN2kSensorData() {
   if (++sensorIndex > 11) {
     sensorIndex = 0;
   }
+}
+
+void readRestartCount() {
+  EEPROM.get(0, boatData.system.egnineRoomRestartCount);
+  boatData.system.egnineRoomRestartCount++;
+  EEPROM.put(0, boatData.system.egnineRoomRestartCount);
 }

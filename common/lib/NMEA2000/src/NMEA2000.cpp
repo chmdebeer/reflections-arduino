@@ -1177,7 +1177,7 @@ bool tNMEA2000::CheckKnownMessage(unsigned long PGN, bool &SystemMessage, bool &
     }
 
     FastPacket=IsProprietaryFastPacketMessage(PGN);
-    
+
     return false;
 }
 

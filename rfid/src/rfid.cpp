@@ -1,6 +1,7 @@
 #include <Arduino.h>
+#include <Wire.h>
 #include <rfid.h>
-#include <PN532_HSU.h>
+#include <PN532_I2C.h>
 #include <PN532.h>
 
 byte readCard[4];
@@ -17,8 +18,8 @@ byte storedCard[9][4] = {
   {0x89, 0x1E, 0x68, 0x8E}
 };
 
-PN532_HSU pn532hsu(Serial1);
-PN532 nfc(pn532hsu);
+PN532_I2C pn532I2C(Wire);
+PN532 nfc(pn532I2C);
 
 void setupRFID() {
   nfc.begin();
@@ -67,36 +68,33 @@ bool readRFID () {
   static uint8_t lastUid[] = { 0, 0, 0, 0, 0, 0, 0 };
   uint8_t uidLength;
 
-  success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, &uid[0], &uidLength);
+  success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, &uid[0], &uidLength, 100);
 
   if (success) {
-    if (checkTwo(uid, lastUid)) {
-      return false;
-    }
-    for (uint8_t i=0; i < uidLength; i++) {
-      lastUid[i] = uid[i];
-    }
-    // Serial.println("Found a card!");
-    // Serial.print("UID Length: ");Serial.print(uidLength, DEC);Serial.println(" bytes");
-    // Serial.print("UID Value: ");
-    // for (uint8_t i=0; i < uidLength; i++)
-    // {
-    //   Serial.print(" 0x");Serial.print(uid[i], HEX);
+    // if (checkTwo(uid, lastUid)) {
+    //   return false;
     // }
-    // Serial.println("");
+    // for (uint8_t i=0; i < uidLength; i++) {
+    //   lastUid[i] = uid[i];
+    // }
+
+    Serial.println("Found a card!");
+    Serial.print("UID Length: ");Serial.print(uidLength, DEC);Serial.println(" bytes");
+    Serial.print("UID Value: ");
+    for (uint8_t i=0; i < uidLength; i++)
+    {
+      Serial.print(" 0x");Serial.print(uid[i], HEX);
+    }
+    Serial.println("");
+
     for ( uint8_t c = 0; c < 9; c++) {  //
       if (checkTwo(storedCard[c], uid)) {
         return true;
       }
     }
   }
-  else
-  {
-    // Serial.println("Timed out waiting for a card");
-    for (uint8_t i=0; i < 7; i++) {
-      lastUid[i] = 0;
-    }
+  for (uint8_t i=0; i < uidLength; i++) {
+    lastUid[i] = 0;
   }
-
   return false;
 }
