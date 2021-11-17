@@ -148,9 +148,15 @@ void handleEngineRPM(const tN2kMsg &N2kMsg) {
   double boost=0.0;
   int8_t trim=0;
 
+  // N2kMsg.Print(&Serial);
+
   if (ParseN2kEngineParamRapid(N2kMsg, instance, rpm, boost, trim) ) {
     if (instance == 0) {
-      boatData.engines.port.rpm = (int)rpm;
+      if (N2kMsg.Source == 1) {
+        boatData.engines.starboard.rpm = (int)rpm;
+      } else {
+        boatData.engines.port.rpm = (int)rpm;
+      }
     } else if (instance == 1) {
       boatData.engines.starboard.rpm = (int)rpm;
     }
@@ -215,6 +221,7 @@ void sendN2kBinaryStatus() {
   tN2kMsg N2kMsg;
   tN2kBinaryStatus binaryStatus_1;
   tN2kBinaryStatus binaryStatus_2;
+  tN2kBinaryStatus binaryStatus_3;
 
   binaryStatus_1 = binaryStatusFromBoatData(1, boatData);
   SetN2kBinaryStatus(N2kMsg, 1, binaryStatus_1);
@@ -226,6 +233,11 @@ void sendN2kBinaryStatus() {
   SetN2kBinaryStatus(N2kMsg, 2, binaryStatus_2);
   NMEA2000.SendMsg(N2kMsg);
 
+  delay(N2K_DELAY_BETWEEN_SEND);
+
+  binaryStatus_3 = binaryStatusFromBoatData(3, boatData);
+  SetN2kBinaryStatus(N2kMsg, 3, binaryStatus_3);
+  NMEA2000.SendMsg(N2kMsg);
 }
 
 void sendN2kSystemStatus() {

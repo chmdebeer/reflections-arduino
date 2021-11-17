@@ -9,10 +9,13 @@
 #define I_PORT_ENGINE_RPM 20
 #define I_STARBOARD_ENGINE_RPM 21
 
-#define O_RELAY_1 22
-#define O_WATER_PUMP 23
-#define O_CABIN_HEATER_FAN 24
-#define O_ENGINE_BILGE_PUMP 25
+// Nutra-salt port
+// Nutra-salt starboard
+
+#define O_PORT_NUTRASALT 22
+#define O_STARBOARD_NUTRASALT 23
+#define O_RELAY_3 24
+#define O_RELAY_4 25
 #define O_PORT_DRIVE_BOW_UP 26
 #define O_PORT_DRIVE_BOW_DOWN 27
 #define O_STARBOARD_DRIVE_BOW_UP 28
@@ -33,11 +36,11 @@
 #define O_TRIM_BOW_DOWN 40
 #define O_TRIM_BOW_UP 41
 
-#define O_BILGE_BLOWER_2 42
+#define O_CABIN_HEATER_FAN 42
 #define O_BILGE_BLOWER_1 43
-#define RELAY_11 44
+#define O_WATER_PUMP 44
+#define O_ENGINE_BILGE_PUMP 45
 
-#define O_TIP120_12 45
 #define O_TIP120_13 46
 
 #define I_ONE_WIRE_BUS 47
@@ -53,6 +56,13 @@
 #define I_AUX_BATTERY A8
 
 #define I_ENGINE_BILGE_PUMP A7
+
+#define I_STEERING_ANGLE A6
+
+#define I_PORT_ENGINE_ALARM A5
+#define I_STARBOARD_ENGINE_ALARM A4
+#define I_PORT_ENGINE_CHECK_LIGHT A3
+#define I_STARBOARD_ENGINE_ALARM A2
 
 #define I_STARBOARD_DRIVE_TILT A1
 #define I_PORT_DRIVE_TILT A0

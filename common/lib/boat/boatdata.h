@@ -12,6 +12,7 @@ typedef struct {
   tN2kOnOff ignition;
   tN2kOnOff start;
   bool ready;
+  tN2kOnOff nutraSalt;
   int rpm;
   int oilPressure;
   int waterTemperature;

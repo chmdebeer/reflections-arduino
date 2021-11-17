@@ -25,10 +25,10 @@ void setupIO() {
 
   pinMode(I_DOOR_LOCK, INPUT_PULLUP);
 
-  pinMode(O_RELAY_1, OUTPUT);
-  pinMode(O_WATER_PUMP, OUTPUT);
-  pinMode(O_CABIN_HEATER_FAN, OUTPUT);
-  pinMode(O_ENGINE_BILGE_PUMP, OUTPUT);
+  pinMode(O_PORT_NUTRASALT, OUTPUT);
+  pinMode(O_STARBOARD_NUTRASALT, OUTPUT);
+  pinMode(O_RELAY_3, OUTPUT);
+  pinMode(O_RELAY_4, OUTPUT);
   pinMode(O_PORT_DRIVE_BOW_UP, OUTPUT);
   pinMode(O_PORT_DRIVE_BOW_DOWN, OUTPUT);
   pinMode(O_STARBOARD_DRIVE_BOW_UP, OUTPUT);
@@ -50,9 +50,10 @@ void setupIO() {
   pinMode(O_TRIM_BOW_DOWN, OUTPUT);
 
   pinMode(O_BILGE_BLOWER_1, OUTPUT);
-  pinMode(O_BILGE_BLOWER_2, OUTPUT);
+  pinMode(O_CABIN_HEATER_FAN, OUTPUT);
+  pinMode(O_WATER_PUMP, OUTPUT);
+  pinMode(O_ENGINE_BILGE_PUMP, OUTPUT);
 
-  pinMode(O_TIP120_12, OUTPUT);
   pinMode(O_TIP120_13, OUTPUT);
 
   pinMode(I_PORT_ENGINE_TEMP, INPUT);
@@ -111,13 +112,13 @@ bool readIO(BoatData &boatData) {
 }
 
 void setIO(BoatData &boatData) {
-  digitalWrite(O_RELAY_1, HIGH);
-  digitalWrite(O_TIP120_12, LOW);
+  digitalWrite(O_PORT_NUTRASALT, !(boatData.engines.port.nutraSalt == N2kOnOff_On));
+  digitalWrite(O_STARBOARD_NUTRASALT, !(boatData.engines.starboard.nutraSalt == N2kOnOff_On));
+  digitalWrite(O_RELAY_3, HIGH);
+  digitalWrite(O_RELAY_4, HIGH);
+
   digitalWrite(O_TIP120_13, LOW);
 
-  digitalWrite(O_WATER_PUMP, !(boatData.utilities.waterPump == N2kOnOff_On));
-  digitalWrite(O_CABIN_HEATER_FAN, !(boatData.utilities.cabinHeaterFan == N2kOnOff_On));
-  digitalWrite(O_ENGINE_BILGE_PUMP, !(boatData.bilgePumps.engineRoom.on == N2kOnOff_On));
   digitalWrite(O_PORT_DRIVE_BOW_UP, !(boatData.tilt.port.bowUp == N2kOnOff_On));
   digitalWrite(O_PORT_DRIVE_BOW_DOWN, !(boatData.tilt.port.bowDown == N2kOnOff_On));
   digitalWrite(O_STARBOARD_DRIVE_BOW_UP, !(boatData.tilt.starboard.bowUp == N2kOnOff_On));
@@ -161,7 +162,11 @@ void setIO(BoatData &boatData) {
   }
 
   digitalWrite(O_BILGE_BLOWER_1, boatData.blowers.one == N2kOnOff_On);
-  digitalWrite(O_BILGE_BLOWER_2, boatData.blowers.two == N2kOnOff_On);
+  digitalWrite(O_CABIN_HEATER_FAN, boatData.utilities.cabinHeaterFan == N2kOnOff_On);
+  digitalWrite(O_WATER_PUMP, boatData.utilities.waterPump == N2kOnOff_On);
+  digitalWrite(O_ENGINE_BILGE_PUMP, boatData.bilgePumps.engineRoom.on == N2kOnOff_On);
+  Serial.print("pump ");
+  Serial.println(boatData.bilgePumps.engineRoom.on == N2kOnOff_On);
 
 }
 
@@ -231,12 +236,12 @@ void readSensors(BoatData &boatData) {
   }
   boatData.batteries.auxiliary = value;
 
-  value = readAtd(I_ENGINE_BILGE_PUMP, 0, 750, 0, 2000, 100.0);
-  if (value> 200) {
-    boatData.bilgePumps.engineRoom.on = N2kOnOff_On;
-  } else {
-    boatData.bilgePumps.engineRoom.on = N2kOnOff_Off;
-  }
+  // value = readAtd(I_ENGINE_BILGE_PUMP, 0, 750, 0, 2000, 100.0);
+  // if (value> 200) {
+  //   boatData.bilgePumps.engineRoom.on = N2kOnOff_On;
+  // } else {
+  //   boatData.bilgePumps.engineRoom.on = N2kOnOff_Off;
+  // }
 
 }
 
