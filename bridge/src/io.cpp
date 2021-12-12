@@ -125,10 +125,10 @@ bool readIO(BoatData &boatData) {
   newIO |= readStartButton(buttons[E_PORT_START], boatData.engines.port);
   newIO |= readStartButton(buttons[E_STARBOARD_START], boatData.engines.starboard);
 
-  newIO |= readMomentaryButton(buttons[E_PORT_DRIVE_BOW_UP], boatData.tilt.port.bowUp, true);
-  newIO |= readMomentaryButton(buttons[E_PORT_DRIVE_BOW_DOWN], boatData.tilt.port.bowDown, true);
-  newIO |= readMomentaryButton(buttons[E_STARBOARD_DRIVE_BOW_UP], boatData.tilt.starboard.bowUp, true);
-  newIO |= readMomentaryButton(buttons[E_STARBOARD_DRIVE_BOW_DOWN], boatData.tilt.starboard.bowDown, true);
+  newIO |= readMomentaryButton(buttons[E_PORT_DRIVE_BOW_UP], boatData.engines.port.tilt.bowUp, true);
+  newIO |= readMomentaryButton(buttons[E_PORT_DRIVE_BOW_DOWN], boatData.engines.port.tilt.bowDown, true);
+  newIO |= readMomentaryButton(buttons[E_STARBOARD_DRIVE_BOW_UP], boatData.engines.starboard.tilt.bowUp, true);
+  newIO |= readMomentaryButton(buttons[E_STARBOARD_DRIVE_BOW_DOWN], boatData.engines.starboard.tilt.bowDown, true);
 
   newIO |= readMomentaryButton(buttons[E_PORT_TRIM_BOW_UP], boatData.trim.port.bowUp, true);
   newIO |= readMomentaryButton(buttons[E_PORT_TRIM_BOW_DOWN], boatData.trim.port.bowDown, true);

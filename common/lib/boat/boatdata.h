@@ -9,17 +9,6 @@ enum OffOn {
 };
 
 typedef struct {
-  tN2kOnOff ignition;
-  tN2kOnOff start;
-  bool ready;
-  tN2kOnOff nutraSalt;
-  int rpm;
-  int oilPressure;
-  int waterTemperature;
-  int tiltAngle;
-} Engine;
-
-typedef struct {
   double port;
   double starboard;
   double auxiliary;
@@ -31,9 +20,48 @@ typedef struct {
 } Fuel;
 
 typedef struct {
+  tN2kOnOff one;
+  tN2kOnOff two;
+} Blowers;
+
+typedef struct {
+  tN2kOnOff port;
+  tN2kOnOff starboard;
+} Wipers;
+
+typedef struct {
+  tN2kOnOff one;
+  tN2kOnOff two;
+} Horn;
+
+typedef struct {
+  double angle;
+  tN2kOnOff bowUp;
+  tN2kOnOff bowDown;
+} BowUpDown;
+
+typedef struct {
+  BowUpDown port;
+  BowUpDown starboard;
+} Trim;
+
+typedef struct {
+  tN2kOnOff ignition;
+  tN2kOnOff start;
+  bool ready;
+  tN2kOnOff nutraSalt;
+  int rpm;
+  int oilPressure;
+  int waterTemperature;
+  BowUpDown tilt;
+  double steering;
+} Engine;
+
+typedef struct {
   Engine port;
   Engine starboard;
-  double engineRoomTemperature;
+  double engineRoomTemperatureBottom;
+  double engineRoomTemperatureTop;
 } Engines;
 
 typedef struct {
@@ -73,32 +101,6 @@ typedef struct {
 } BilgePumps;
 
 typedef struct {
-  tN2kOnOff one;
-  tN2kOnOff two;
-} Blowers;
-
-typedef struct {
-  int angle;
-  tN2kOnOff bowUp;
-  tN2kOnOff bowDown;
-} BowUpDown;
-
-typedef struct {
-  BowUpDown port;
-  BowUpDown starboard;
-} Trim;
-
-typedef struct {
-  tN2kOnOff port;
-  tN2kOnOff starboard;
-} Wipers;
-
-typedef struct {
-  tN2kOnOff one;
-  tN2kOnOff two;
-} Horn;
-
-typedef struct {
   Horn horn;
   Wipers wipers;
   tN2kOnOff waterPump;
@@ -125,6 +127,7 @@ typedef struct {
 } AC;
 
 typedef struct {
+  double insideTemperature;
   double cabinTemperature;
   double belowDeckTemperature;
 } Environment;
@@ -139,7 +142,6 @@ typedef struct {
 typedef struct {
   Fuel fuel;
   Engines engines;
-  Trim tilt;
   Trim trim;
   Batteries batteries;
   Blowers blowers;

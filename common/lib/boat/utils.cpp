@@ -14,6 +14,7 @@ double readAtd(int pin, long fromMin, long fromMax, long toMin, long toMax, doub
 
   atdValue = analogRead(pin);
   atdValue = map(atdValue, fromMin, fromMax, toMin, toMax);
+
   return (((double)atdValue)/scale);
 
 }
@@ -142,9 +143,9 @@ void printBoatData(BoatData &boatData) {
   Serial.println("+--------------------------------------------|");
   Serial.println("|                Drive                       |");
   Serial.print("| Port ");
-  if (boatData.tilt.port.bowUp == N2kOnOff_On) { Serial.print("  Up  "); } else if (boatData.tilt.port.bowDown == N2kOnOff_On) { Serial.print(" Down "); } else { Serial.print("      "); }
+  if (boatData.engines.port.tilt.bowUp == N2kOnOff_On) { Serial.print("  Up  "); } else if (boatData.engines.port.tilt.bowDown == N2kOnOff_On) { Serial.print(" Down "); } else { Serial.print("      "); }
   Serial.print("      | Starboard        ");
-  if (boatData.tilt.starboard.bowUp == N2kOnOff_On) { Serial.print("  Up  "); } else if (boatData.tilt.starboard.bowDown == N2kOnOff_On) { Serial.print(" Down "); } else { Serial.print("      "); }
+  if (boatData.engines.starboard.tilt.bowUp == N2kOnOff_On) { Serial.print("  Up  "); } else if (boatData.engines.starboard.tilt.bowDown == N2kOnOff_On) { Serial.print(" Down "); } else { Serial.print("      "); }
   Serial.println(" |");
 
   Serial.println("+--------------------------------------------|");

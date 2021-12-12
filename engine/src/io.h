@@ -45,32 +45,50 @@
 
 #define I_ONE_WIRE_BUS 47
 
-#define I_PORT_ENGINE_TEMP A15
-#define I_STARBOARD_ENGINE_TEMP A14
-#define I_PORT_ENGINE_OIL A13
-#define I_STARBOARD_ENGINE_OIL A12
-#define I_FUEL A11
-
-#define I_PORT_BATTERY A10
-#define I_STARBOARD_BATTERY A9
-#define I_AUX_BATTERY A8
-
-#define I_ENGINE_BILGE_PUMP A7
-
-#define I_STEERING_ANGLE A6
-
-#define I_PORT_ENGINE_ALARM A5
-#define I_STARBOARD_ENGINE_ALARM A4
-#define I_PORT_ENGINE_CHECK_LIGHT A3
-#define I_STARBOARD_ENGINE_ALARM A2
-
-#define I_STARBOARD_DRIVE_TILT A1
-#define I_PORT_DRIVE_TILT A0
+//20
+    // Port 12v
+//19
+#define I_PORT_ENGINE_OIL A14
+//18
+#define I_PORT_ENGINE_TEMP A12
+//17
+#define I_PORT_DRIVE_TILT A15
+//16
+  // Vin
+//15
+#define I_STARBOARD_ENGINE_OIL A13
+//14
+#define I_STARBOARD_ENGINE_TEMP A9
+//13
+#define I_STARBOARD_DRIVE_TILT A7
+//12
+   // Starboard 12v
+//11
+   //GND
+//10
+#define I_FUEL A0
+//09
+#define I_ENGINE_BILGE_PUMP A2
+//08
+#define I_AUX_BATTERY A1
+//07
+#define I_PORT_BATTERY A8
+//06
+#define I_STARBOARD_BATTERY A10
+//05
+#define I_STEERING_ANGLE A11
+//04
+#define I_PORT_ENGINE_CHECK_LIGHT A5
+//03
+#define I_PORT_ENGINE_ALARM A6
+//02
+#define I_STARBOARD_ENGINE_CHECK_LIGHT A4
+//01
+#define I_STARBOARD_ENGINE_ALARM A3
 
 void setupIO();
 bool readIO(BoatData &boatData);
 void setIO(BoatData &boatData);
 void readSensors(BoatData &boatData);
-bool readTilt(BoatData &boatData);
 
 #endif

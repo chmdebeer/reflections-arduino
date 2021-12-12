@@ -14,16 +14,11 @@ Bounce doorLock = Bounce();
 
 DallasTemperature sensors(&oneWire);
 
-uint8_t engineRoomTemperatureSensorID[8] = { 0x28, 0xFF, 0x10, 0x05, 0x72, 0x17, 0x04, 0xF6 };
-uint8_t portEngineTemperatureSensorID[8] = { 0x28, 0xFF, 0xD8, 0x17, 0x71, 0x17, 0x04, 0x31 };
-uint8_t starboardEngineTemperatureSensorID[8] = { 0x28, 0xFF, 0x1F, 0x0B, 0x70, 0x17, 0x04, 0xC3 };
-
-int portTilt[10] = {};
-int starboardTilt[10] = {};
+uint8_t cabinTemperatureSensorID[8] = { 0x28, 0xFF, 0x10, 0x05, 0x72, 0x17, 0x04, 0xF6 };
+uint8_t engineTemperatureBottomSensorID[8] = { 0x28, 0xFF, 0xD8, 0x17, 0x71, 0x17, 0x04, 0x31 };
+uint8_t engineTemperatureTopSensorID[8] = { 0x28, 0xFF, 0x1F, 0x0B, 0x70, 0x17, 0x04, 0xC3 };
 
 void setupIO() {
-
-  pinMode(I_DOOR_LOCK, INPUT_PULLUP);
 
   pinMode(O_PORT_NUTRASALT, OUTPUT);
   pinMode(O_STARBOARD_NUTRASALT, OUTPUT);
@@ -56,21 +51,27 @@ void setupIO() {
 
   pinMode(O_TIP120_13, OUTPUT);
 
-  pinMode(I_PORT_ENGINE_TEMP, INPUT);
-  pinMode(I_STARBOARD_ENGINE_TEMP, INPUT);
   pinMode(I_PORT_ENGINE_OIL, INPUT);
+  pinMode(I_PORT_ENGINE_TEMP, INPUT);
+  pinMode(I_PORT_DRIVE_TILT, INPUT);
+  pinMode(I_PORT_ENGINE_ALARM, INPUT_PULLUP);
+  pinMode(I_PORT_ENGINE_CHECK_LIGHT, INPUT_PULLUP);
+
   pinMode(I_STARBOARD_ENGINE_OIL, INPUT);
+  pinMode(I_STARBOARD_ENGINE_TEMP, INPUT);
+  pinMode(I_STARBOARD_DRIVE_TILT, INPUT);
+  pinMode(I_STARBOARD_ENGINE_ALARM, INPUT_PULLUP);
+  pinMode(I_STARBOARD_ENGINE_CHECK_LIGHT, INPUT_PULLUP);
+
   pinMode(I_FUEL, INPUT);
-
-  pinMode(I_PORT_BATTERY, INPUT);
-  pinMode(I_STARBOARD_BATTERY, INPUT);
-  pinMode(I_AUX_BATTERY, INPUT);
-
+  pinMode(I_STEERING_ANGLE, INPUT);
   pinMode(I_ENGINE_BILGE_PUMP, INPUT);
 
-  pinMode(I_PORT_DRIVE_TILT, INPUT);
-  pinMode(I_STARBOARD_DRIVE_TILT, INPUT);
+  pinMode(I_AUX_BATTERY, INPUT);
+  pinMode(I_PORT_BATTERY, INPUT);
+  pinMode(I_STARBOARD_BATTERY, INPUT);
 
+  pinMode(I_DOOR_LOCK, INPUT_PULLUP);
   doorLock.attach(I_DOOR_LOCK);
   doorLock.interval(25); // interval in ms
 
@@ -79,7 +80,6 @@ void setupIO() {
 }
 
 bool readIO(BoatData &boatData) {
-  static bool bilgePumpOn = false;
   bool newIO = false;
   double value;
 
@@ -94,18 +94,15 @@ bool readIO(BoatData &boatData) {
   }
 
   value = analogRead(I_ENGINE_BILGE_PUMP);
-  if (value > 200) {
+  if ((value > 600) && (boatData.bilgePumps.engineRoom.floatSwitch != N2kOnOff_On)) {
     boatData.bilgePumps.engineRoom.floatSwitch = N2kOnOff_On;
-    if (!bilgePumpOn) {
-      bilgePumpOn = true;
-      newIO |= true;
-    }
-  } else {
+    newIO |= true;
+    Serial.println("pump on");
+  }
+  if ((value < 100) && (boatData.bilgePumps.engineRoom.floatSwitch != N2kOnOff_Off)) {
     boatData.bilgePumps.engineRoom.floatSwitch = N2kOnOff_Off;
-    if (bilgePumpOn) {
-      bilgePumpOn = false;
-      newIO |= true;
-    }
+    newIO |= true;
+    Serial.println("pump off");
   }
 
   return newIO;
@@ -119,10 +116,10 @@ void setIO(BoatData &boatData) {
 
   digitalWrite(O_TIP120_13, LOW);
 
-  digitalWrite(O_PORT_DRIVE_BOW_UP, !(boatData.tilt.port.bowUp == N2kOnOff_On));
-  digitalWrite(O_PORT_DRIVE_BOW_DOWN, !(boatData.tilt.port.bowDown == N2kOnOff_On));
-  digitalWrite(O_STARBOARD_DRIVE_BOW_UP, !(boatData.tilt.starboard.bowUp == N2kOnOff_On));
-  digitalWrite(O_STARBOARD_DRIVE_BOW_DOWN, !(boatData.tilt.starboard.bowDown == N2kOnOff_On));
+  digitalWrite(O_PORT_DRIVE_BOW_UP, !(boatData.engines.port.tilt.bowUp == N2kOnOff_On));
+  digitalWrite(O_PORT_DRIVE_BOW_DOWN, !(boatData.engines.port.tilt.bowDown == N2kOnOff_On));
+  digitalWrite(O_STARBOARD_DRIVE_BOW_UP, !(boatData.engines.starboard.tilt.bowUp == N2kOnOff_On));
+  digitalWrite(O_STARBOARD_DRIVE_BOW_DOWN, !(boatData.engines.starboard.tilt.bowDown == N2kOnOff_On));
 
   digitalWrite(O_ENGINE_ROOM_LIGHTS, boatData.lights.engineRoom == N2kOnOff_On);
   digitalWrite(O_AFT_DECK_LIGHTS, boatData.lights.aftDeck == N2kOnOff_On);
@@ -165,121 +162,112 @@ void setIO(BoatData &boatData) {
   digitalWrite(O_CABIN_HEATER_FAN, boatData.utilities.cabinHeaterFan == N2kOnOff_On);
   digitalWrite(O_WATER_PUMP, boatData.utilities.waterPump == N2kOnOff_On);
   digitalWrite(O_ENGINE_BILGE_PUMP, boatData.bilgePumps.engineRoom.on == N2kOnOff_On);
-  Serial.print("pump ");
-  Serial.println(boatData.bilgePumps.engineRoom.on == N2kOnOff_On);
 
 }
 
 void readSensors(BoatData &boatData) {
   double value;
+  int atdValue;
 
   sensors.requestTemperatures();
 
-  value = (double)sensors.getTempC(portEngineTemperatureSensorID);
+  value = (double)sensors.getTempC(engineTemperatureBottomSensorID);
+  boatData.engines.engineRoomTemperatureBottom = CToKelvin(value);
 
-  value = readAtd(I_PORT_ENGINE_TEMP, 0, 538, 130, 0, 1.0);
-  if (value < 0) {
-    value = 0;
-  }
+  value = (double)sensors.getTempC(engineTemperatureTopSensorID);
+  boatData.engines.engineRoomTemperatureTop = CToKelvin(value);
+
+  value = (double)sensors.getTempC(cabinTemperatureSensorID);
+  boatData.environment.insideTemperature = CToKelvin(value);
+
+  Serial.println("");
+  Serial.println("============");
+  Serial.print("I_PORT_ENGINE_TEMP ");
+  Serial.print(analogRead(I_PORT_ENGINE_TEMP));
+  Serial.print(" ");
+  value = readAtd(I_PORT_ENGINE_TEMP, 0, 560, 90, 0, 1.0);
+  Serial.println(value);
   boatData.engines.port.waterTemperature = CToKelvin(value);
-
-  value = (double)sensors.getTempC(starboardEngineTemperatureSensorID);
-
-  value = readAtd(I_STARBOARD_ENGINE_TEMP, 0, 538, 130, 0, 1.0);
-  if (value < 0) {
-    value = 0;
-  }
-
-  boatData.engines.starboard.waterTemperature = CToKelvin(value);
-
-  value = readAtd(I_PORT_ENGINE_OIL, 96, 330, 662390, 0, 1.0);
-  if (value < 0) {
-    value = 0;
-  }
+  Serial.print("I_PORT_ENGINE_OIL ");
+  Serial.print(analogRead(I_PORT_ENGINE_OIL));
+  Serial.print(" ");
+  value = readAtd(I_PORT_ENGINE_OIL, 0, 122, 822, 0, 1.0);
+  Serial.println(value);
   boatData.engines.port.oilPressure = value;
+  //
+  Serial.print("I_PORT_DRIVE_TILT ");
+  Serial.print(analogRead(I_PORT_DRIVE_TILT));
+  Serial.print(" ");
+  value = readAtd(I_PORT_DRIVE_TILT, 0, 80, 0, 40, 1.0);
+  Serial.println(value);
+  boatData.engines.port.tilt.angle = value;
 
-  value = readAtd(I_STARBOARD_ENGINE_OIL, 96, 330, 662390, 0, 1.0);
-  if (value < 0) {
-    value = 0;
-  }
+  Serial.print("I_PORT_ENGINE_ALARM ");
+  Serial.println(digitalRead(I_PORT_ENGINE_ALARM));
+  Serial.print("I_PORT_ENGINE_CHECK_LIGHT ");
+  Serial.println(digitalRead(I_PORT_ENGINE_CHECK_LIGHT));
+  //
+  Serial.println("");
+  Serial.print("I_STARBOARD_ENGINE_TEMP ");
+  Serial.print(" ");
+  Serial.print(analogRead(I_STARBOARD_ENGINE_TEMP));
+  Serial.print(" ");
+  value = readAtd(I_STARBOARD_ENGINE_TEMP, 0, 560, 90, 0, 1.0);
+  Serial.println(value);
+  boatData.engines.starboard.waterTemperature = CToKelvin(value);
+  //
+  // I_PORT_ENGINE_TEMP 311 - 346    26 336   36 342   41   343      57  178
+  // I_PORT_ENGINE_OIL 203 - 223     652  24     620 30
+  // I_PORT_DRIVE_TILT 832 - 921     54 26     19  44
+  // I_PORT_ENGINE_ALARM 1
+  // I_PORT_ENGINE_CHECK_LIGHT 1
+    //
+
+    // I_STARBOARD_ENGINE_TEMP 340    22 304    37  349    45   331     72  117
+    // I_STARBOARD_ENGINE_OIL 218    748 11    668   15
+    // I_STARBOARD_DRIVE_TILT 889    14  6    21  41
+    // I_STARBOARD_ENGINE_ALARM 1
+    // I_STARBOARD_ENGINE_CHECK_LIGHT 1
+
+
+  Serial.print("I_STARBOARD_ENGINE_OIL ");
+  Serial.print(analogRead(I_STARBOARD_ENGINE_OIL));
+  Serial.print(" ");
+  value = readAtd(I_STARBOARD_ENGINE_OIL, 0, 122, 822, 0, 1.0);
+  Serial.println(value);
   boatData.engines.starboard.oilPressure = value;
+  //
 
-  value = (double)sensors.getTempC(engineRoomTemperatureSensorID);
-  if (value < 0) {
-    value = 0;
-  }
-  boatData.engines.engineRoomTemperature = CToKelvin(value);
-
-  value = readAtd(I_FUEL, 275, 510, 100, 0, 1.0);
-  if (value < 0) {
-    value = 0;
-  }
+  atdValue = analogRead(I_FUEL);
+  // value = readAtd(I_FUEL, 38, 222, 100, 0, 1.0);
+  value = readAtd(I_FUEL, 45, 900, 100, 0, 1.0);
   boatData.fuel.level = value;
-  Serial.print("Fuel ");
-  Serial.println(boatData.fuel.level);
 
-  value = readAtd(I_PORT_BATTERY, 0, 720, 0, 2000, 100.0);
-  if (value < 0) {
-    value = 0;
-  }
+  value = readAtd(I_PORT_BATTERY, 0, 1023, 0, 1555, 100.0);
   boatData.batteries.port = value;
 
-  value = readAtd(I_STARBOARD_BATTERY, 0, 726, 0, 2000, 100.0);
-  if (value < 0) {
-    value = 0;
-  }
+  value = readAtd(I_STARBOARD_BATTERY, 0, 1023, 0, 1558, 100.0);
   boatData.batteries.starboard = value;
 
-  value = readAtd(I_AUX_BATTERY, 0, 722, 0, 2000, 100.0);
-  if (value < 0) {
-    value = 0;
-  }
+  value = readAtd(I_AUX_BATTERY, 0, 1023, 0, 1555, 100.0);
   boatData.batteries.auxiliary = value;
 
-  // value = readAtd(I_ENGINE_BILGE_PUMP, 0, 750, 0, 2000, 100.0);
-  // if (value> 200) {
-  //   boatData.bilgePumps.engineRoom.on = N2kOnOff_On;
-  // } else {
-  //   boatData.bilgePumps.engineRoom.on = N2kOnOff_Off;
-  // }
 
-}
+  Serial.print("I_STARBOARD_DRIVE_TILT ");
+  Serial.print(analogRead(I_STARBOARD_DRIVE_TILT));
+  Serial.print(" ");
+  value = readAtd(I_STARBOARD_DRIVE_TILT, 0, 80, 0, 40, 1.0);
+  Serial.println(value);
+  boatData.engines.starboard.tilt.angle = value;
 
-bool readTilt(BoatData &boatData) {
-  static int count = 0;
-  static double currentPortAngle = -15;
-  static double currentStarboardAngle = -15;
-  double portAngle;
-  double starboardAngle;
-  bool changed = false;
 
-  portTilt[count] = analogRead(I_PORT_DRIVE_TILT);
-  starboardTilt[count] = analogRead(I_STARBOARD_DRIVE_TILT);
-  count+=1;
-  if (count >= 10) {
-    count = 0;
-  }
 
-  portAngle = (portTilt[0] + portTilt[1] + portTilt[2] + portTilt[3] + portTilt[4] + portTilt[5] + portTilt[6] + portTilt[7] + portTilt[8] + portTilt[9]) / 10.0;
-  portAngle = (portAngle * 0.07042) - 10.61;
-  portAngle = round(portAngle);
-  if (portAngle < -9.0) {
-    portAngle = -9.0;
-  }
-  boatData.tilt.port.angle = portAngle;
+  Serial.print("I_STARBOARD_ENGINE_ALARM ");
+  Serial.println(digitalRead(I_STARBOARD_ENGINE_ALARM));
+  Serial.print("I_STARBOARD_ENGINE_CHECK_LIGHT ");
+  Serial.println(digitalRead(I_STARBOARD_ENGINE_CHECK_LIGHT));
 
-  starboardAngle = (starboardTilt[0] + starboardTilt[1] + starboardTilt[2] + starboardTilt[3] + starboardTilt[4] + starboardTilt[5] + starboardTilt[6] + starboardTilt[7] + starboardTilt[8] + starboardTilt[9]) / 10.0;
-  starboardAngle = (starboardAngle * 0.07042) - 10.61;
-  starboardAngle = round(starboardAngle);
-  if (starboardAngle < -9.0) {
-    starboardAngle = -9.0;
-  }
-  boatData.tilt.starboard.angle = starboardAngle;
+  value = readAtd(I_STEERING_ANGLE, 8, 198, 7854, -7854, 10000.0);
+  boatData.engines.port.steering = value;
 
-  if ((currentPortAngle != portAngle) || (currentStarboardAngle != starboardAngle)) {
-    currentPortAngle = portAngle;
-    currentStarboardAngle = starboardAngle;
-    changed = true;
-  }
-  return changed;
 }

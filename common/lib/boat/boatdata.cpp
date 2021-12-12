@@ -22,10 +22,10 @@ uint64_t binaryStatusFromBoatData(unsigned char instance, BoatData boatData) {
     N2kSetStatusBinaryOnStatus(binaryStatus, boatData.engines.starboard.ignition, offset++); // 1.3
     N2kSetStatusBinaryOnStatus(binaryStatus, boatData.engines.starboard.start, offset++); // 1.4
 
-    N2kSetStatusBinaryOnStatus(binaryStatus, boatData.tilt.port.bowUp, offset++); // 1.5
-    N2kSetStatusBinaryOnStatus(binaryStatus, boatData.tilt.port.bowDown, offset++); // 1.6
-    N2kSetStatusBinaryOnStatus(binaryStatus, boatData.tilt.starboard.bowUp, offset++); // 1.7
-    N2kSetStatusBinaryOnStatus(binaryStatus, boatData.tilt.starboard.bowDown, offset++); // 1.7
+    N2kSetStatusBinaryOnStatus(binaryStatus, boatData.engines.port.tilt.bowUp, offset++); // 1.5
+    N2kSetStatusBinaryOnStatus(binaryStatus, boatData.engines.port.tilt.bowDown, offset++); // 1.6
+    N2kSetStatusBinaryOnStatus(binaryStatus, boatData.engines.starboard.tilt.bowUp, offset++); // 1.7
+    N2kSetStatusBinaryOnStatus(binaryStatus, boatData.engines.starboard.tilt.bowDown, offset++); // 1.7
 
     N2kSetStatusBinaryOnStatus(binaryStatus, boatData.trim.port.bowUp, offset++); // 1.9
     N2kSetStatusBinaryOnStatus(binaryStatus, boatData.trim.port.bowDown, offset++); // 1.10
@@ -96,10 +96,10 @@ void boatDataFromBinaryStatus(unsigned char instance, uint64_t binaryStatus, Boa
     boatData.engines.starboard.ignition = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 1.3
     boatData.engines.starboard.start = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 1.4
 
-    boatData.tilt.port.bowUp = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 1.5
-    boatData.tilt.port.bowDown = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 1.6
-    boatData.tilt.starboard.bowUp = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 1.7
-    boatData.tilt.starboard.bowDown = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 1.8
+    boatData.engines.port.tilt.bowUp = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 1.5
+    boatData.engines.port.tilt.bowDown = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 1.6
+    boatData.engines.starboard.tilt.bowUp = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 1.7
+    boatData.engines.starboard.tilt.bowDown = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 1.8
 
     boatData.trim.port.bowUp = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 1.9
     boatData.trim.port.bowDown = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 1.10

@@ -17,6 +17,7 @@ void readSensors();
 void sendN2kBinaryStatus();
 void sendN2kSystemStatus();
 void sendN2kSensorData();
-void SendN2kEngineRPM();
+void sendN2kSteeringData();
+void sendN2kEngineRPM();
 
 void readRestartCount();

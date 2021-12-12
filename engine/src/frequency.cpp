@@ -71,8 +71,8 @@ bool loopFrequency(BoatData &boatData)
       starboardFrequency = _starboardFrequency;
     }
 
-    boatData.engines.port.rpm = ((portFrequency*60.0) / 4.0);
-    boatData.engines.starboard.rpm = ((starboardFrequency*60.0) / 4.0);
+    boatData.engines.port.rpm = ((portFrequency*60.0) / 3.0);
+    boatData.engines.starboard.rpm = ((starboardFrequency*60.0) / 3.0);
 
   }
   return result;
