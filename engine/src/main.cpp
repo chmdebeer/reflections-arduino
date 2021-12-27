@@ -41,15 +41,18 @@ enum timers {
 
 Timer * timers = new Timer[T_ITEMS];
 
-bool newN2kBinaryStatus = false;
-
 unsigned long portEngineRpmTime = 0;
 unsigned long starboardEngineRpmTime = 0;
 
 void setup() {
+  unsigned char instance;
+
   Serial.begin(115200);
+
   clearBoatData(boatData);
-  setIO(boatData);
+  for (instance=1; instance < (unsigned char)E_SWITCH_BANK_INSTANCES; instance++) {
+    setIO(boatData, (SwitchBankInstance)instance);
+  }
   setupIO();
   setupTimers();
   setupNMEA();
@@ -64,14 +67,12 @@ void loop() {
 
   loopFrequency(boatData);
 
-  if (readIO(boatData)) {
-    sendN2kBinaryStatus();
-    newN2kBinaryStatus = true;
+  if (readIO(boatData, E_ENGINE_STATUS)) {
+    n2kBinaryStatus(E_ENGINE_STATUS);
   }
 
-  if (newN2kBinaryStatus) {
-    setIO(boatData);
-    newN2kBinaryStatus = false;
+  if (readIO(boatData, E_UTILITIES_ENGINE_ROOM)) {
+    n2kBinaryStatus(E_UTILITIES_ENGINE_ROOM);
   }
 
   TimerManager::instance().update();
@@ -134,9 +135,9 @@ void handleBinaryStatus(const tN2kMsg &N2kMsg) {
   tN2kBinaryStatus binaryStatus;
 
   if (ParseN2kBinaryStatus(N2kMsg, instance, binaryStatus) ) {
-
+    Serial.println(instance);
     boatDataFromBinaryStatus(instance, binaryStatus, boatData);
-    newN2kBinaryStatus = true;
+    setIO(boatData, (SwitchBankInstance)instance);
   }
 }
 
@@ -145,7 +146,8 @@ void handleAddressClaim(const tN2kMsg &N2kMsg) {
 }
 
 void newDevice() {
-  sendN2kBinaryStatus();
+  n2kBinaryStatus(E_ENGINE_STATUS);
+  n2kBinaryStatus(E_UTILITIES_ENGINE_ROOM);
 }
 
 void handleEngineRPM(const tN2kMsg &N2kMsg) {
@@ -198,12 +200,12 @@ void handleEngineDynamicParameters(const tN2kMsg &N2kMsg) {
   }
 }
 
-void sendN2kBinaryStatus() {
+void n2kBinaryStatus(SwitchBankInstance instance) {
   tN2kMsg N2kMsg;
   tN2kBinaryStatus binaryStatus;
 
-  binaryStatus = binaryStatusFromBoatData(4, boatData);
-  SetN2kBinaryStatus(N2kMsg, 4, binaryStatus);
+  binaryStatus = binaryStatusFromBoatData(instance, boatData);
+  SetN2kBinaryStatus(N2kMsg, (unsigned char)instance, binaryStatus);
   NMEA2000.SendMsg(N2kMsg);
 }
 
@@ -278,9 +280,9 @@ void sendN2kEngineRPM() {
   // static int rpm = 0;
   // Serial.print("RPM ");
   // Serial.println(rpm);
-  // SetN2kEngineParamRapid(N2kMsg_rapidPort, 0, rpm, 0.0, boatData.engines.port.tilt.angle);
+  // SetN2kEngineParamRapid(N2kMsg_rapidPort, 0, rpm, 0.0, boatData.engines.port.trim.angle);
   // NMEA2000.SendMsg(N2kMsg_rapidPort);
-  // SetN2kEngineParamRapid(N2kMsg_rapidStarboard, 1, boatData.engines.starboard.rpm, 0.0, boatData.engines.starboard.tilt.angle);
+  // SetN2kEngineParamRapid(N2kMsg_rapidStarboard, 1, boatData.engines.starboard.rpm, 0.0, boatData.engines.starboard.trim.angle);
   // NMEA2000.SendMsg(N2kMsg_rapidStarboard);
   // rpm++;
   // return;
@@ -288,7 +290,7 @@ void sendN2kEngineRPM() {
   if ((millis() - portEngineRpmTime) > 2000) {
     // Serial.print("Sending Port RPM ");
     // Serial.println(boatData.engines.port.rpm);
-    SetN2kEngineParamRapid(N2kMsg_rapidPort, 0, boatData.engines.port.rpm, 0.0, boatData.engines.port.tilt.angle);
+    SetN2kEngineParamRapid(N2kMsg_rapidPort, 0, boatData.engines.port.rpm, 0.0, boatData.engines.port.trim.angle);
     NMEA2000.SendMsg(N2kMsg_rapidPort);
 
     SetN2kEngineDynamicParam(N2kMsg_dynamicPort, 0,
@@ -309,7 +311,7 @@ void sendN2kEngineRPM() {
   if ((millis() - starboardEngineRpmTime) > 2000) {
     // Serial.print("Sending Starboard RPM ");
     // Serial.println(boatData.engines.starboard.rpm);
-    SetN2kEngineParamRapid(N2kMsg_rapidStarboard, 1, boatData.engines.starboard.rpm, 0.0, boatData.engines.starboard.tilt.angle);
+    SetN2kEngineParamRapid(N2kMsg_rapidStarboard, 1, boatData.engines.starboard.rpm, 0.0, boatData.engines.starboard.trim.angle);
     NMEA2000.SendMsg(N2kMsg_rapidStarboard);
 
     SetN2kEngineDynamicParam(N2kMsg_dynamicStarboard, 1,

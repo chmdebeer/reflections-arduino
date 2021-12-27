@@ -8,6 +8,22 @@ enum OffOn {
 	ON = 1
 };
 
+enum SwitchBankInstance {
+  E_ZERO,
+  E_IGNITION_START,
+  E_ENGINE_STATUS,
+  E_POWER_TRIM,
+  E_TRIM,
+  E_NUTRASALT,
+  E_LIGHTS,
+  E_SPOTLIGHT,
+  E_UTILITIES_CABIN,
+  E_UTILITIES_BILGE,
+  E_UTILITIES_ENGINE_ROOM,
+  E_SWITCH_BANK_INSTANCES
+};
+
+
 typedef struct {
   double port;
   double starboard;
@@ -18,11 +34,6 @@ typedef struct {
   double level;
   double capacity;
 } Fuel;
-
-typedef struct {
-  tN2kOnOff one;
-  tN2kOnOff two;
-} Blowers;
 
 typedef struct {
   tN2kOnOff port;
@@ -53,8 +64,10 @@ typedef struct {
   int rpm;
   int oilPressure;
   int waterTemperature;
-  BowUpDown tilt;
+  BowUpDown trim;
   double steering;
+  tN2kOnOff check;
+  tN2kOnOff malfunction;
 } Engine;
 
 typedef struct {
@@ -144,7 +157,7 @@ typedef struct {
   Engines engines;
   Trim trim;
   Batteries batteries;
-  Blowers blowers;
+  tN2kOnOff blower;
   BilgePumps bilgePumps;
   Lights lights;
   Utilities utilities;

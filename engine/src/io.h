@@ -14,7 +14,7 @@
 
 #define O_PORT_NUTRASALT 22
 #define O_STARBOARD_NUTRASALT 23
-#define O_RELAY_3 24
+#define O_IGNITION 24
 #define O_RELAY_4 25
 #define O_PORT_DRIVE_BOW_UP 26
 #define O_PORT_DRIVE_BOW_DOWN 27
@@ -52,7 +52,7 @@
 //18
 #define I_PORT_ENGINE_TEMP A12
 //17
-#define I_PORT_DRIVE_TILT A15
+#define I_PORT_DRIVE_TRIM A15
 //16
   // Vin
 //15
@@ -60,7 +60,7 @@
 //14
 #define I_STARBOARD_ENGINE_TEMP A9
 //13
-#define I_STARBOARD_DRIVE_TILT A7
+#define I_STARBOARD_DRIVE_TRIM A7
 //12
    // Starboard 12v
 //11
@@ -77,18 +77,18 @@
 #define I_STARBOARD_BATTERY A10
 //05
 #define I_STEERING_ANGLE A11
-//04
-#define I_PORT_ENGINE_CHECK_LIGHT A5
+//04 yellow
+#define I_PORT_ENGINE_CHECK A5
 //03
-#define I_PORT_ENGINE_ALARM A6
-//02
-#define I_STARBOARD_ENGINE_CHECK_LIGHT A4
+#define I_PORT_ENGINE_MALFUNCTION A6
+//02 yellow
+#define I_STARBOARD_ENGINE_CHECK A4
 //01
-#define I_STARBOARD_ENGINE_ALARM A3
+#define I_STARBOARD_ENGINE_MALFUNCTION A3
 
 void setupIO();
-bool readIO(BoatData &boatData);
-void setIO(BoatData &boatData);
+bool readIO(BoatData &boatData, SwitchBankInstance instance);
+void setIO(BoatData &boatData, SwitchBankInstance instance);
 void readSensors(BoatData &boatData);
 
 #endif

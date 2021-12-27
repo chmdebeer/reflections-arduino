@@ -128,14 +128,12 @@ void printBoatData(BoatData &boatData) {
   if (boatData.lights.anchor == N2kOnOff_On) { Serial.print("  On"); } else { Serial.print(" Off"); }
   Serial.println(" |");
 
-  Serial.print("| Blower 1:   ");
-  if (boatData.blowers.one == N2kOnOff_On) { Serial.print("  On"); } else { Serial.print(" Off"); }
+  Serial.print("| Blower :   ");
+  if (boatData.blower == N2kOnOff_On) { Serial.print("  On"); } else { Serial.print(" Off"); }
   Serial.print(" | Engine Bilge:      ");
   if (boatData.bilgePumps.engineRoom.on == N2kOnOff_On) { Serial.print("  On"); } else { Serial.print(" Off"); }
   Serial.println(" |");
 
-  Serial.print("| Blower 2:   ");
-  if (boatData.blowers.two == N2kOnOff_On) { Serial.print("  On"); } else { Serial.print(" Off"); }
   Serial.print(" | Midship Bilge:     ");
   if (boatData.bilgePumps.midship.on == N2kOnOff_On) { Serial.print("  On"); } else { Serial.print(" Off"); }
   Serial.println(" |");
@@ -143,9 +141,9 @@ void printBoatData(BoatData &boatData) {
   Serial.println("+--------------------------------------------|");
   Serial.println("|                Drive                       |");
   Serial.print("| Port ");
-  if (boatData.engines.port.tilt.bowUp == N2kOnOff_On) { Serial.print("  Up  "); } else if (boatData.engines.port.tilt.bowDown == N2kOnOff_On) { Serial.print(" Down "); } else { Serial.print("      "); }
+  if (boatData.engines.port.trim.bowUp == N2kOnOff_On) { Serial.print("  Up  "); } else if (boatData.engines.port.trim.bowDown == N2kOnOff_On) { Serial.print(" Down "); } else { Serial.print("      "); }
   Serial.print("      | Starboard        ");
-  if (boatData.engines.starboard.tilt.bowUp == N2kOnOff_On) { Serial.print("  Up  "); } else if (boatData.engines.starboard.tilt.bowDown == N2kOnOff_On) { Serial.print(" Down "); } else { Serial.print("      "); }
+  if (boatData.engines.starboard.trim.bowUp == N2kOnOff_On) { Serial.print("  Up  "); } else if (boatData.engines.starboard.trim.bowDown == N2kOnOff_On) { Serial.print(" Down "); } else { Serial.print("      "); }
   Serial.println(" |");
 
   Serial.println("+--------------------------------------------|");

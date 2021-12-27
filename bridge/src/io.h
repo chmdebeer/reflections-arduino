@@ -76,8 +76,8 @@
 #define I_STARBOARD_TRIM_BOW_DOWN A2
 
 void setupIO();
-bool readIO(BoatData &boatData);
-void setIO(BoatData &boatData);
+bool readIO(BoatData &boatData, SwitchBankInstance instance);
+void setIO(BoatData &boatData, SwitchBankInstance instance);
 bool readTilt(BoatData &boatData);
 void setupAC();
 void readAC(BoatData &boatData);

@@ -3,7 +3,6 @@
 #include <N2kTypes.h>
 #include "BoatData.h"
 #include "io.h"
-#include "servo.h"
 #include <Wire.h>
 #include "utils.h"
 
@@ -45,8 +44,6 @@ enum servo {
   S_STARBOARD_ENGINE_TEMPERATURE,
   S_ITEMS
 };
-
-Servo * servos = new Servo[S_ITEMS];
 
 void setupIO() {
   buttons[E_PORT_START].attach(I_PORT_START, INPUT_PULLUP);
@@ -107,135 +104,148 @@ void setupIO() {
   pinMode(O_BATHROOM_LIGHTS, OUTPUT);
   pinMode(O_MOSFET_4, OUTPUT);
 
-  servos[S_PORT_ENGINE_RPM].attach(O_PORT_ENGINE_RPM);
-  servos[S_PORT_ENGINE_OIL].attach(O_PORT_ENGINE_OIL);
-  // servos[S_PORT_ENGINE_TEMPERATURE].attach(O_PORT_ENGINE_TEMPERATUR);
-  servos[S_STARBOARD_ENGINE_RPM].attach(O_STARBOARD_ENGINE_RPM);
-  servos[S_STARBOARD_ENGINE_OIL].attach(O_STARBOARD_ENGINE_OIL);
-  // servos[S_STARBOARD_ENGINE_TEMPERATURE].attach(O_STARBOARD_ENGINE_TEMPERATUR);
-
-  for (int s = 0; s < S_ITEMS; s++) {
-    servos[s].writeMicroseconds(1500);
-  }
 }
 
-bool readIO(BoatData &boatData) {
+bool readIO(BoatData &boatData, SwitchBankInstance instance) {
   bool newIO = false;
 
-  newIO |= readStartButton(buttons[E_PORT_START], boatData.engines.port);
-  newIO |= readStartButton(buttons[E_STARBOARD_START], boatData.engines.starboard);
+  if (instance == E_IGNITION_START) {
+    newIO |= readStartButton(buttons[E_PORT_START], boatData.engines.port);
+    newIO |= readStartButton(buttons[E_STARBOARD_START], boatData.engines.starboard);
 
-  newIO |= readMomentaryButton(buttons[E_PORT_DRIVE_BOW_UP], boatData.engines.port.tilt.bowUp, true);
-  newIO |= readMomentaryButton(buttons[E_PORT_DRIVE_BOW_DOWN], boatData.engines.port.tilt.bowDown, true);
-  newIO |= readMomentaryButton(buttons[E_STARBOARD_DRIVE_BOW_UP], boatData.engines.starboard.tilt.bowUp, true);
-  newIO |= readMomentaryButton(buttons[E_STARBOARD_DRIVE_BOW_DOWN], boatData.engines.starboard.tilt.bowDown, true);
+  } else if (instance == E_ENGINE_STATUS) {
 
-  newIO |= readMomentaryButton(buttons[E_PORT_TRIM_BOW_UP], boatData.trim.port.bowUp, true);
-  newIO |= readMomentaryButton(buttons[E_PORT_TRIM_BOW_DOWN], boatData.trim.port.bowDown, true);
-  newIO |= readMomentaryButton(buttons[E_STARBOARD_TRIM_BOW_UP], boatData.trim.starboard.bowUp, true);
-  newIO |= readMomentaryButton(buttons[E_STARBOARD_TRIM_BOW_DOWN], boatData.trim.starboard.bowDown, true);
+  } else if (instance == E_POWER_TRIM) {
+    newIO |= readMomentaryButton(buttons[E_PORT_DRIVE_BOW_UP], boatData.engines.port.trim.bowUp, true);
+    newIO |= readMomentaryButton(buttons[E_PORT_DRIVE_BOW_DOWN], boatData.engines.port.trim.bowDown, true);
+    newIO |= readMomentaryButton(buttons[E_STARBOARD_DRIVE_BOW_UP], boatData.engines.starboard.trim.bowUp, true);
+    newIO |= readMomentaryButton(buttons[E_STARBOARD_DRIVE_BOW_DOWN], boatData.engines.starboard.trim.bowDown, true);
 
-  buttons[E_BILGE_PUMP].update();
-  if (buttons[E_BILGE_PUMP].fell()) {
-    newIO |= true;
-    if ((boatData.bilgePumps.engineRoom.on == N2kOnOff_Off) && (boatData.bilgePumps.midship.on == N2kOnOff_Off)) {
-      boatData.bilgePumps.engineRoom.on = N2kOnOff_On;
-    } else if ((boatData.bilgePumps.engineRoom.on == N2kOnOff_On) && (boatData.bilgePumps.midship.on == N2kOnOff_Off)) {
-      boatData.bilgePumps.midship.on = N2kOnOff_On;
-    } else {
-      boatData.bilgePumps.engineRoom.on = N2kOnOff_Off;
-      boatData.bilgePumps.midship.on = N2kOnOff_Off;
+  } else if (instance == E_TRIM) {
+    newIO |= readMomentaryButton(buttons[E_PORT_TRIM_BOW_UP], boatData.trim.port.bowUp, true);
+    newIO |= readMomentaryButton(buttons[E_PORT_TRIM_BOW_DOWN], boatData.trim.port.bowDown, true);
+    newIO |= readMomentaryButton(buttons[E_STARBOARD_TRIM_BOW_UP], boatData.trim.starboard.bowUp, true);
+    newIO |= readMomentaryButton(buttons[E_STARBOARD_TRIM_BOW_DOWN], boatData.trim.starboard.bowDown, true);
+
+  } else if (instance == E_NUTRASALT) {
+
+  } else if (instance == E_LIGHTS) {
+    newIO |= readToggleButton(buttons[E_ENGINE_ROOM_LIGHTS], boatData.lights.engineRoom);
+    newIO |= readToggleButton(buttons[E_CABIN_LIGHTS], boatData.lights.cabin);
+
+    buttons[E_NAVIGATION_LIGHTS].update();
+    if (buttons[E_NAVIGATION_LIGHTS].fell()) {
+      newIO |= true;
+      if ((boatData.lights.navigation == N2kOnOff_Off) && (boatData.lights.anchor == N2kOnOff_Off)) {
+        boatData.lights.navigation = N2kOnOff_On;
+        boatData.lights.instruments = N2kOnOff_On;
+      } else if ((boatData.lights.navigation == N2kOnOff_On) && (boatData.lights.anchor == N2kOnOff_Off)) {
+        boatData.lights.anchor = N2kOnOff_On;
+        boatData.lights.instruments = N2kOnOff_On;
+      } else if ((boatData.lights.navigation == N2kOnOff_On) && (boatData.lights.anchor == N2kOnOff_On)) {
+        boatData.lights.navigation = N2kOnOff_Off;
+        boatData.lights.instruments = N2kOnOff_On;
+      } else {
+        boatData.lights.navigation = N2kOnOff_Off;
+        boatData.lights.anchor = N2kOnOff_Off;
+        boatData.lights.instruments = N2kOnOff_Off;
+      }
     }
-  }
 
-  buttons[E_BILGE_BLOWER].update();
-  if (buttons[E_BILGE_BLOWER].fell()) {
-    newIO |= true;
-    if ((boatData.blowers.one == N2kOnOff_Off) && (boatData.blowers.two == N2kOnOff_Off)) {
-      boatData.blowers.one = N2kOnOff_On;
-    } else if ((boatData.blowers.one == N2kOnOff_On) && (boatData.blowers.two == N2kOnOff_Off)) {
-      boatData.blowers.two = N2kOnOff_On;
-    } else {
-      boatData.blowers.one = N2kOnOff_Off;
-      boatData.blowers.two = N2kOnOff_Off;
+  } else if (instance == E_SPOTLIGHT) {
+    buttons[E_SPOT_LIGHT].update();
+    if (buttons[E_SPOT_LIGHT].fell()) {
+      newIO |= true;
+      if ((boatData.lights.spotlight.spot == N2kOnOff_Off) && (boatData.lights.spotlight.fog == N2kOnOff_Off)) {
+        boatData.lights.spotlight.spot = N2kOnOff_On;
+        boatData.lights.spotlight.fog = N2kOnOff_Off;
+      } else if ((boatData.lights.spotlight.spot == N2kOnOff_On) && (boatData.lights.spotlight.fog == N2kOnOff_Off)) {
+        boatData.lights.spotlight.spot = N2kOnOff_Off;
+        boatData.lights.spotlight.fog = N2kOnOff_On;
+      } else if ((boatData.lights.spotlight.spot == N2kOnOff_Off) && (boatData.lights.spotlight.fog == N2kOnOff_On)) {
+        boatData.lights.spotlight.spot = N2kOnOff_Off;
+        boatData.lights.spotlight.fog = N2kOnOff_Off;
+      } else {
+        boatData.lights.spotlight.spot = N2kOnOff_Off;
+        boatData.lights.spotlight.fog = N2kOnOff_Off;
+      }
     }
-  }
 
-  buttons[E_NAVIGATION_LIGHTS].update();
-  if (buttons[E_NAVIGATION_LIGHTS].fell()) {
-    newIO |= true;
-    if ((boatData.lights.navigation == N2kOnOff_Off) && (boatData.lights.anchor == N2kOnOff_Off)) {
-      boatData.lights.navigation = N2kOnOff_On;
-      boatData.lights.instruments = N2kOnOff_On;
-    } else if ((boatData.lights.navigation == N2kOnOff_On) && (boatData.lights.anchor == N2kOnOff_Off)) {
-      boatData.lights.anchor = N2kOnOff_On;
-      boatData.lights.instruments = N2kOnOff_On;
-    } else if ((boatData.lights.navigation == N2kOnOff_On) && (boatData.lights.anchor == N2kOnOff_On)) {
-      boatData.lights.navigation = N2kOnOff_Off;
-      boatData.lights.instruments = N2kOnOff_On;
-    } else {
-      boatData.lights.navigation = N2kOnOff_Off;
-      boatData.lights.anchor = N2kOnOff_Off;
-      boatData.lights.instruments = N2kOnOff_Off;
+  } else if (instance == E_UTILITIES_CABIN) {
+    newIO |= readToggleButton(buttons[E_FM_RADIO], boatData.utilities.fmRadio);
+    newIO |= readToggleButton(buttons[E_REFRIGERATOR], boatData.utilities.refrigerator);
+
+    buttons[E_HORN].update();
+    if (buttons[E_HORN].fell()) {
+      newIO |= true;
+      boatData.utilities.horn.one = N2kOnOff_On;
+      boatData.utilities.horn.two = N2kOnOff_On;
     }
-  }
-
-  buttons[E_HORN].update();
-  if (buttons[E_HORN].fell()) {
-    newIO |= true;
-    boatData.utilities.horn.one = N2kOnOff_On;
-    boatData.utilities.horn.two = N2kOnOff_On;
-  }
-  if (buttons[E_HORN].rose()) {
-    newIO |= true;
-    boatData.utilities.horn.one = N2kOnOff_Off;
-    boatData.utilities.horn.two = N2kOnOff_Off;
-  }
-
-  buttons[E_WINDOW_WIPERS].update();
-  if (buttons[E_WINDOW_WIPERS].fell()) {
-    newIO |= true;
-    if ((boatData.utilities.wipers.port != N2kOnOff_On) || (boatData.utilities.wipers.starboard != N2kOnOff_On)) {
-      boatData.utilities.wipers.port = N2kOnOff_On;
-      boatData.utilities.wipers.starboard = N2kOnOff_On;
-    } else {
-      boatData.utilities.wipers.port = N2kOnOff_Off;
-      boatData.utilities.wipers.starboard = N2kOnOff_Off;
+    if (buttons[E_HORN].rose()) {
+      newIO |= true;
+      boatData.utilities.horn.one = N2kOnOff_Off;
+      boatData.utilities.horn.two = N2kOnOff_Off;
     }
-  }
 
-  buttons[E_SPOT_LIGHT].update();
-  if (buttons[E_SPOT_LIGHT].fell()) {
-    newIO |= true;
-    if ((boatData.lights.spotlight.spot == N2kOnOff_Off) && (boatData.lights.spotlight.fog == N2kOnOff_Off)) {
-      boatData.lights.spotlight.spot = N2kOnOff_On;
-      boatData.lights.spotlight.fog = N2kOnOff_Off;
-    } else if ((boatData.lights.spotlight.spot == N2kOnOff_On) && (boatData.lights.spotlight.fog == N2kOnOff_Off)) {
-      boatData.lights.spotlight.spot = N2kOnOff_Off;
-      boatData.lights.spotlight.fog = N2kOnOff_On;
-    } else if ((boatData.lights.spotlight.spot == N2kOnOff_Off) && (boatData.lights.spotlight.fog == N2kOnOff_On)) {
-      boatData.lights.spotlight.spot = N2kOnOff_Off;
-      boatData.lights.spotlight.fog = N2kOnOff_Off;
-    } else {
-      boatData.lights.spotlight.spot = N2kOnOff_Off;
-      boatData.lights.spotlight.fog = N2kOnOff_Off;
+    buttons[E_WINDOW_WIPERS].update();
+    if (buttons[E_WINDOW_WIPERS].fell()) {
+      newIO |= true;
+      if ((boatData.utilities.wipers.port != N2kOnOff_On) || (boatData.utilities.wipers.starboard != N2kOnOff_On)) {
+        boatData.utilities.wipers.port = N2kOnOff_On;
+        boatData.utilities.wipers.starboard = N2kOnOff_On;
+      } else {
+        boatData.utilities.wipers.port = N2kOnOff_Off;
+        boatData.utilities.wipers.starboard = N2kOnOff_Off;
+      }
     }
+
+  } else if ((instance == E_UTILITIES_BILGE) || (instance == E_UTILITIES_ENGINE_ROOM)) {
+    newIO |= readToggleButton(buttons[E_WATER_PUMP], boatData.utilities.waterPump);
+
+    buttons[E_BILGE_PUMP].update();
+    if (buttons[E_BILGE_PUMP].fell()) {
+      newIO |= true;
+      if ((boatData.bilgePumps.engineRoom.on == N2kOnOff_Off) && (boatData.bilgePumps.midship.on == N2kOnOff_Off)) {
+        boatData.bilgePumps.engineRoom.on = N2kOnOff_On;
+      } else if ((boatData.bilgePumps.engineRoom.on == N2kOnOff_On) && (boatData.bilgePumps.midship.on == N2kOnOff_Off)) {
+        boatData.bilgePumps.midship.on = N2kOnOff_On;
+      } else {
+        boatData.bilgePumps.engineRoom.on = N2kOnOff_Off;
+        boatData.bilgePumps.midship.on = N2kOnOff_Off;
+      }
+    }
+
+    newIO |= readToggleButton(buttons[E_BILGE_BLOWER], boatData.blower);
   }
-
-  newIO |= readToggleButton(buttons[E_ENGINE_ROOM_LIGHTS], boatData.lights.engineRoom);
-  newIO |= readToggleButton(buttons[E_CABIN_LIGHTS], boatData.lights.cabin);
-
-  newIO |= readToggleButton(buttons[E_WATER_PUMP], boatData.utilities.waterPump);
 
   // newIO |= readToggleButton(buttons[E_ACCESSORIES_RADIO], boatData.utilities.radio);
-  newIO |= readToggleButton(buttons[E_FM_RADIO], boatData.utilities.fmRadio);
-  newIO |= readToggleButton(buttons[E_REFRIGERATOR], boatData.utilities.refrigerator);
 
   return newIO;
 }
 
-void setIO(BoatData &boatData) {
-  digitalWrite(O_BILGE_BLOWER, ((boatData.blowers.one == N2kOnOff_On) || (boatData.blowers.two == N2kOnOff_On)));
+void setIO(BoatData &boatData, SwitchBankInstance instance) {
+  if (instance == E_IGNITION_START) {
+
+  } else if (instance == E_ENGINE_STATUS) {
+
+  } else if (instance == E_POWER_TRIM) {
+
+  } else if (instance == E_TRIM) {
+
+  } else if (instance == E_NUTRASALT) {
+
+  } else if (instance == E_LIGHTS) {
+
+  } else if (instance == E_SPOTLIGHT) {
+
+  } else if (instance == E_UTILITIES_CABIN) {
+
+  } else if (instance == E_UTILITIES_BILGE) {
+
+  } else if (instance == E_UTILITIES_ENGINE_ROOM) {
+
+  }
+  digitalWrite(O_BILGE_BLOWER, (boatData.blower == N2kOnOff_On));
   digitalWrite(O_BILGE_PUMP, (
     (boatData.bilgePumps.engineRoom.on == N2kOnOff_On) || (boatData.bilgePumps.midship.on == N2kOnOff_On) ||
     (boatData.bilgePumps.engineRoom.floatSwitch == N2kOnOff_On) || (boatData.bilgePumps.midship.floatSwitch == N2kOnOff_On)
@@ -259,15 +269,6 @@ void setIO(BoatData &boatData) {
   digitalWrite(O_BERTH_LIGHTS, (boatData.lights.berth == N2kOnOff_On));
   digitalWrite(O_MOSFET_4, LOW);
 
-}
-
-void setServos(BoatData &boatData) {
-  servos[S_PORT_ENGINE_RPM].writeMicroseconds(map(boatData.engines.port.rpm, 0, 6000, 1000, 2000));
-  servos[S_PORT_ENGINE_OIL].writeMicroseconds(map(boatData.engines.port.oilPressure, 0, 549172, 1000, 2000));
-  servos[S_PORT_ENGINE_TEMPERATURE].writeMicroseconds(map(boatData.engines.port.waterTemperature, 40, 120, 1000, 2000));
-  servos[S_STARBOARD_ENGINE_RPM].writeMicroseconds(map(boatData.engines.starboard.rpm, 0, 6000, 1000, 2000));
-  servos[S_STARBOARD_ENGINE_OIL].writeMicroseconds(map(boatData.engines.starboard.oilPressure, 0, 549172, 1000, 2000));
-  servos[S_STARBOARD_ENGINE_TEMPERATURE].writeMicroseconds(map(boatData.engines.starboard.waterTemperature, 40, 120, 1000, 2000));
 }
 
 void setupAC() {

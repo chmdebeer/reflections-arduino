@@ -45,12 +45,17 @@ Timer * timers = new Timer[T_ITEMS];
 TinyGPSPlus gps;
 
 bool newN2kBinaryStatus = false;
-bool newN2kServoStatus = false;
 
 void setup() {
+  unsigned char instance;
+
   Serial.begin(115200);
+
   clearBoatData(boatData);
-  setIO(boatData);
+  for (instance=1; instance < (unsigned char)E_SWITCH_BANK_INSTANCES; instance++) {
+    setIO(boatData, (SwitchBankInstance)instance);
+  }
+
   setupIO();
   setupAC();
   setupTimers();
@@ -59,21 +64,30 @@ void setup() {
 }
 
 void loop() {
-  bool newIoBinaryStatus = false;
 
   NMEA2000.ParseMessages();
 
-  newIoBinaryStatus = readIO(boatData);
-
-  if (newIoBinaryStatus) {
-    sendN2kBinaryStatus();
+  if (readIO(boatData, E_IGNITION_START)) {
+    n2kBinaryStatus(E_IGNITION_START);
   }
-
-  if (newIoBinaryStatus || newN2kBinaryStatus) {
-    setIO(boatData);
-    printBoatData(boatData);
-    newN2kBinaryStatus = false;
-    newIoBinaryStatus = false;
+  if (readIO(boatData, E_POWER_TRIM)) {
+    n2kBinaryStatus(E_POWER_TRIM);
+  }
+  if (readIO(boatData, E_TRIM)) {
+    n2kBinaryStatus(E_TRIM);
+  }
+  if (readIO(boatData, E_LIGHTS)) {
+    n2kBinaryStatus(E_LIGHTS);
+  }
+  if (readIO(boatData, E_SPOTLIGHT)) {
+    n2kBinaryStatus(E_SPOTLIGHT);
+  }
+  if (readIO(boatData, E_UTILITIES_CABIN)) {
+    n2kBinaryStatus(E_UTILITIES_CABIN);
+  }
+  if (readIO(boatData, E_UTILITIES_ENGINE_ROOM)) {
+    n2kBinaryStatus(E_UTILITIES_BILGE);
+    n2kBinaryStatus(E_UTILITIES_ENGINE_ROOM);
   }
 
   TimerManager::instance().update();
@@ -163,7 +177,6 @@ void handleEngineRPM(const tN2kMsg &N2kMsg) {
     if ((abs(portEngineRpm - boatData.engines.port.rpm) > 5) || (abs(starboardEngineRpm - boatData.engines.starboard.rpm) > 5)) {
       portEngineRpm = boatData.engines.port.rpm;
       starboardEngineRpm = boatData.engines.starboard.rpm;
-      newN2kServoStatus = true;
     }
   }
 }
@@ -190,7 +203,6 @@ void handleEngineDynamicParameters(const tN2kMsg &N2kMsg) {
       boatData.engines.starboard.oilPressure = EngineOilPress;
       boatData.engines.starboard.waterTemperature = KelvinToC(EngineCoolantTemp);
     }
-    newN2kServoStatus = true;
   }
 }
 
@@ -204,7 +216,6 @@ void handleFluidLevel(const tN2kMsg &N2kMsg) {
       if (fluidType == N2kft_Fuel) {
         boatData.fuel.level = level;
         boatData.fuel.capacity = capacity;
-        newN2kServoStatus = true;
     }
   }
 }
@@ -214,29 +225,22 @@ void handleAddressClaim(const tN2kMsg &N2kMsg) {
 }
 
 void newDevice() {
-  sendN2kBinaryStatus();
+  n2kBinaryStatus(E_IGNITION_START);
+  n2kBinaryStatus(E_POWER_TRIM);
+  n2kBinaryStatus(E_TRIM);
+  n2kBinaryStatus(E_LIGHTS);
+  n2kBinaryStatus(E_SPOTLIGHT);
+  n2kBinaryStatus(E_UTILITIES_CABIN);
+  n2kBinaryStatus(E_UTILITIES_BILGE);
+  n2kBinaryStatus(E_UTILITIES_ENGINE_ROOM);
 }
 
-void sendN2kBinaryStatus() {
+void n2kBinaryStatus(SwitchBankInstance instance) {
   tN2kMsg N2kMsg;
-  tN2kBinaryStatus binaryStatus_1;
-  tN2kBinaryStatus binaryStatus_2;
-  tN2kBinaryStatus binaryStatus_3;
+  tN2kBinaryStatus binaryStatus;
 
-  binaryStatus_1 = binaryStatusFromBoatData(1, boatData);
-  SetN2kBinaryStatus(N2kMsg, 1, binaryStatus_1);
-  NMEA2000.SendMsg(N2kMsg);
-
-  delay(N2K_DELAY_BETWEEN_SEND);
-
-  binaryStatus_2 = binaryStatusFromBoatData(2, boatData);
-  SetN2kBinaryStatus(N2kMsg, 2, binaryStatus_2);
-  NMEA2000.SendMsg(N2kMsg);
-
-  delay(N2K_DELAY_BETWEEN_SEND);
-
-  binaryStatus_3 = binaryStatusFromBoatData(3, boatData);
-  SetN2kBinaryStatus(N2kMsg, 3, binaryStatus_3);
+  binaryStatus = binaryStatusFromBoatData(instance, boatData);
+  SetN2kBinaryStatus(N2kMsg, (unsigned char)instance, binaryStatus);
   NMEA2000.SendMsg(N2kMsg);
 }
 
