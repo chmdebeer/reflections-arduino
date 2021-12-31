@@ -27,6 +27,7 @@ void loop()
   if (readRFID()) {
     digitalWrite(O_LED, 1);
     digitalWrite(O_DOOR_LOCK_SIGNAL, 0);
+    Serial.println("Pulling door lock signal down");
   } else {
     digitalWrite(O_LED, 0);
     digitalWrite(O_DOOR_LOCK_SIGNAL, 1);

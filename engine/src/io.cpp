@@ -186,13 +186,6 @@ void setIO(BoatData &boatData, SwitchBankInstance instance) {
     digitalWrite(O_ENGINE_BILGE_PUMP, boatData.bilgePumps.engineRoom.on == N2kOnOff_On);
 
   }
-  // digitalWrite(O_IGNITION, !((boatData.engines.port.ignition == N2kOnOff_On) || (boatData.engines.starboard.ignition == N2kOnOff_On)));
-
-
-
-
-
-
 }
 
 void readSensors(BoatData &boatData) {

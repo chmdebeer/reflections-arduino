@@ -67,24 +67,15 @@ void loop() {
 
   NMEA2000.ParseMessages();
 
-  if (readIO(boatData, E_IGNITION_START)) {
-    n2kBinaryStatus(E_IGNITION_START);
+  for (int instance=1; instance < (unsigned char)E_SWITCH_BANK_INSTANCES; instance++) {
+    if (((SwitchBankInstance)instance == E_UTILITIES_ENGINE_ROOM) || ((SwitchBankInstance)instance == E_UTILITIES_ENGINE_ROOM)) {
+      continue;
+    }
+    if (readIO(boatData, (SwitchBankInstance)instance)) {
+      n2kBinaryStatus((SwitchBankInstance)instance);
+    }
   }
-  if (readIO(boatData, E_POWER_TRIM)) {
-    n2kBinaryStatus(E_POWER_TRIM);
-  }
-  if (readIO(boatData, E_TRIM)) {
-    n2kBinaryStatus(E_TRIM);
-  }
-  if (readIO(boatData, E_LIGHTS)) {
-    n2kBinaryStatus(E_LIGHTS);
-  }
-  if (readIO(boatData, E_SPOTLIGHT)) {
-    n2kBinaryStatus(E_SPOTLIGHT);
-  }
-  if (readIO(boatData, E_UTILITIES_CABIN)) {
-    n2kBinaryStatus(E_UTILITIES_CABIN);
-  }
+
   if (readIO(boatData, E_UTILITIES_ENGINE_ROOM)) {
     n2kBinaryStatus(E_UTILITIES_BILGE);
     n2kBinaryStatus(E_UTILITIES_ENGINE_ROOM);
