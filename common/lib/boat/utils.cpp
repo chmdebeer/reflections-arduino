@@ -112,6 +112,61 @@ bool readMomentaryButton(Bounce &button, tN2kOnOff &field, bool fall) {
   return newIO;
 }
 
+bool newTrimAngle(BowUpDown &side) {
+  bool result = false;
+
+  if (side.direction == E_TRIM_OFF) {
+    if (side.bowUp == N2kOnOff_On) {
+      side.direction = E_TRIM_UP;
+    }
+    if (side.bowDown == N2kOnOff_On) {
+      side.direction = E_TRIM_DOWN;
+    }
+    side.start = millis();
+  } else if (side.direction == E_TRIM_UP) {
+    if (side.bowUp == N2kOnOff_On) {
+      if ((millis() - side.start) > 200) {
+        side.angle = side.angle + (millis() - side.start);
+        side.start = millis();
+        result = true;
+      }
+    } else {
+      side.angle = side.angle + (millis() - side.start);
+      side.start = millis();
+      if (side.bowDown == N2kOnOff_On) {
+        side.direction = E_TRIM_DOWN;
+      } else {
+        side.direction = E_TRIM_OFF;
+      }
+      result = true;
+    }
+  } else if (side.direction == E_TRIM_DOWN) {
+    if (side.bowDown == N2kOnOff_On) {
+      if ((millis() - side.start) > 200) {
+        side.angle = side.angle - (millis() - side.start);
+        side.start = millis();
+        result = true;
+      }
+    } else {
+      side.angle = side.angle - (millis() - side.start);
+      side.start = millis();
+      if (side.bowUp == N2kOnOff_On) {
+        side.direction = E_TRIM_UP;
+      } else {
+        side.direction = E_TRIM_OFF;
+      }
+      result = true;
+    }
+  }
+  if (side.angle < 0.0) {
+    side.angle = 0.0;
+  } else if (side.angle > 10000.0) {
+    side.angle = 10000.0;
+  }
+
+  return result;
+}
+
 void printBoatData(BoatData &boatData) {
   Serial.println("+============================================|");
 

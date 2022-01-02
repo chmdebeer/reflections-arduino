@@ -14,6 +14,7 @@ void handleEngineDynamicParameters(const tN2kMsg &N2kMsg);
 
 void newDevice();
 void readSensors();
+void sendN2kTrimTab();
 void n2kBinaryStatus(SwitchBankInstance instance);
 void sendN2kSystemStatus();
 void sendN2kSensorData();

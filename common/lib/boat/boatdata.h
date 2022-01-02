@@ -23,6 +23,12 @@ enum SwitchBankInstance {
   E_SWITCH_BANK_INSTANCES
 };
 
+enum TrimDirection {
+  E_TRIM_OFF,
+  E_TRIM_UP,
+  E_TRIM_DOWN
+};
+
 
 typedef struct {
   double port;
@@ -47,6 +53,8 @@ typedef struct {
 
 typedef struct {
   double angle;
+  TrimDirection direction;
+  unsigned long start;
   tN2kOnOff bowUp;
   tN2kOnOff bowDown;
 } BowUpDown;

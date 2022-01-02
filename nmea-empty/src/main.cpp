@@ -18,6 +18,7 @@
 #include <timer.h>
 #include <timerManager.h>
 #include <Bounce2.h>
+#include "utils.h"
 
 BoatData boatData;
 
@@ -54,13 +55,22 @@ void setup() {
   // Serial.println(restartCount);
 }
 
+
 void loop() {
+  tN2kMsg N2kMsg;
+
   NMEA2000.ParseMessages();
 
   // sendN2kSystemStatus();
 
     // sendN2kBinaryStatus();
     // delay(500);
+  if (newTrimAngle(boatData.trim.port) || newTrimAngle(boatData.trim.starboard)) {
+    Serial.println((int8_t)(boatData.trim.port.angle / 100.0));
+    Serial.println((int8_t)(boatData.trim.starboard.angle / 100.0));
+    SetN2kTrimTab(N2kMsg, (int8_t)(boatData.trim.port.angle / 100.0), (int8_t)(boatData.trim.starboard.angle / 100.0));
+    NMEA2000.SendMsg(N2kMsg);
+  }
 
   TimerManager::instance().update();
 
@@ -153,14 +163,14 @@ void setIO(BoatData &boatData, SwitchBankInstance instance) {
     // boatData.trim.port.bowDown // 4.2
     // boatData.trim.starboard.bowUp // 4.3
     // boatData.trim.starboard.bowDown // 4.4
-    Serial.print("boatData.trim.port.bowUp");
-    Serial.println(boatData.trim.port.bowUp == N2kOnOff_On ? " On" : " Off");
-    Serial.print("boatData.trim.port.bowDown");
-    Serial.println(boatData.trim.port.bowDown == N2kOnOff_On ? " On" : " Off");
-    Serial.print("boatData.trim.starboard.bowUp");
-    Serial.println(boatData.trim.starboard.bowUp == N2kOnOff_On ? " On" : " Off");
-    Serial.print("boatData.trim.starboard.bowDown");
-    Serial.println(boatData.trim.starboard.bowDown == N2kOnOff_On ? " On" : " Off");
+    // Serial.print("boatData.trim.port.bowUp");
+    // Serial.println(boatData.trim.port.bowUp == N2kOnOff_On ? " On" : " Off");
+    // Serial.print("boatData.trim.port.bowDown");
+    // Serial.println(boatData.trim.port.bowDown == N2kOnOff_On ? " On" : " Off");
+    // Serial.print("boatData.trim.starboard.bowUp");
+    // Serial.println(boatData.trim.starboard.bowUp == N2kOnOff_On ? " On" : " Off");
+    // Serial.print("boatData.trim.starboard.bowDown");
+    // Serial.println(boatData.trim.starboard.bowDown == N2kOnOff_On ? " On" : " Off");
 
   } else if (instance == E_NUTRASALT) {
     // boatData.engines.port.nutraSalt // 5.1
@@ -410,7 +420,6 @@ void sendEngine() {
   if (boatData.engines.port.rpm > 5000) {
     boatData.engines.port.rpm = 0;
   }
-  Serial.println(boatData.engines.port.rpm);
 
   boatData.engines.starboard.rpm += 10;
   if (boatData.engines.starboard.rpm > 5000) {

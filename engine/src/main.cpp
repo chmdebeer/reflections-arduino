@@ -271,6 +271,17 @@ void sendN2kSteeringData() {
   NMEA2000.SendMsg(N2kMsg_Port);
 }
 
+void sendN2kTrimTab() {
+  tN2kMsg N2kMsg;
+
+  if (newTrimAngle(boatData.trim.port) || newTrimAngle(boatData.trim.starboard)) {
+    Serial.println((int8_t)(boatData.trim.port.angle / 100.0));
+    Serial.println((int8_t)(boatData.trim.starboard.angle / 100.0));
+    SetN2kTrimTab(N2kMsg, (int8_t)(boatData.trim.port.angle / 100.0), (int8_t)(boatData.trim.starboard.angle / 100.0));
+    NMEA2000.SendMsg(N2kMsg);
+  }
+}
+
 void sendN2kEngineRPM() {
   tN2kMsg N2kMsg_rapidPort;
   tN2kMsg N2kMsg_dynamicPort;
