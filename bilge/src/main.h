@@ -8,7 +8,14 @@ void setupTimers();
 
 void handleNMEA2000Msg(const tN2kMsg &N2kMsg);
 void handleBinaryStatus(const tN2kMsg &N2kMsg);
+void handleAddressClaim(const tN2kMsg &N2kMsg);
 
-void sendN2kBinaryStatus();
-void sendN2kTemperature();
+void readRestartCount();
+void newDevice();
+void n2kBinaryStatus(SwitchBankInstance instance);
+void sendN2kSystemStatus();
+
+void readSensors();
+void sendN2kSensorData();
+
 void sendN2kAttitude();

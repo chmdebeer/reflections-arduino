@@ -42,11 +42,17 @@ bool loopFrequency(BoatData &boatData)
     previousMillis = currentMillis;
 
     if ((portDuration > 0) && (portPulseCount > 0)) {
+      // Serial.print("port ");
+      // Serial.print(portDuration);
+      // Serial.print(" x ");
+      // Serial.print(portPulseCount);
       _duration = portDuration;
       _pulsecount = portPulseCount;
       portDuration = 0; // clear counters
       portPulseCount = 0;
       _portFrequency = (1e6 / double(_duration)) * _pulsecount;
+      // Serial.print(" : ");
+      // Serial.println(_portFrequency);
     } else {
       _portFrequency = 0.0;
       portDuration = 0;
@@ -54,11 +60,17 @@ bool loopFrequency(BoatData &boatData)
     }
 
     if ((starboardDuration > 0) && (starboardPulseCount > 0)) {
+      // Serial.print("starboard ");
+      // Serial.print(starboardDuration);
+      // Serial.print(" x ");
+      // Serial.print(starboardPulseCount);
       _duration = starboardDuration;
       _pulsecount = starboardPulseCount;
       starboardDuration = 0;
       starboardPulseCount = 0;
       _starboardFrequency = (1e6 / double(_duration)) * _pulsecount;
+      // Serial.print(" : ");
+      // Serial.println(_starboardFrequency);
     } else {
       _starboardFrequency = 0.0;
       starboardDuration = 0;

@@ -76,15 +76,18 @@ uint64_t binaryStatusFromBoatData(unsigned char instance, BoatData boatData) {
     N2kSetStatusBinaryOnStatus(binaryStatus, boatData.utilities.blackwaterAirPump, offset++); // 9.1
     N2kSetStatusBinaryOnStatus(binaryStatus, boatData.utilities.macerator, offset++); // 9.2
     N2kSetStatusBinaryOnStatus(binaryStatus, boatData.utilities.showerDrainPump, offset++); // 9.3
-    N2kSetStatusBinaryOnStatus(binaryStatus, boatData.bilgePumps.midship.on, offset++); // 9.4
-    N2kSetStatusBinaryOnStatus(binaryStatus, boatData.bilgePumps.midship.floatSwitch, offset++); // 9.5
+    N2kSetStatusBinaryOnStatus(binaryStatus, boatData.utilities.refrigerator, offset++); // 9.4
 
   } else if (instance == E_UTILITIES_ENGINE_ROOM) {
     N2kSetStatusBinaryOnStatus(binaryStatus, boatData.utilities.waterPump, offset++); // 10.1
     N2kSetStatusBinaryOnStatus(binaryStatus, boatData.blower, offset++); // 10.2
-    N2kSetStatusBinaryOnStatus(binaryStatus, boatData.bilgePumps.engineRoom.on, offset++); // 10.3
-    N2kSetStatusBinaryOnStatus(binaryStatus, boatData.bilgePumps.engineRoom.floatSwitch, offset++); // 10.4
-    N2kSetStatusBinaryOnStatus(binaryStatus, boatData.utilities.doorLock, offset++); // 10.5
+    N2kSetStatusBinaryOnStatus(binaryStatus, boatData.utilities.doorLock, offset++); // 10.3
+
+  } else if (instance == E_BILGE_PUMPS) {
+    N2kSetStatusBinaryOnStatus(binaryStatus, boatData.bilgePumps.midship.on, offset++); // 11.1
+    N2kSetStatusBinaryOnStatus(binaryStatus, boatData.bilgePumps.midship.floatSwitch, offset++); // 11.2
+    N2kSetStatusBinaryOnStatus(binaryStatus, boatData.bilgePumps.engineRoom.on, offset++); // 11.3
+    N2kSetStatusBinaryOnStatus(binaryStatus, boatData.bilgePumps.engineRoom.floatSwitch, offset++); // 11.4
 
   }
 
@@ -155,15 +158,18 @@ void boatDataFromBinaryStatus(unsigned char instance, uint64_t binaryStatus, Boa
     boatData.utilities.blackwaterAirPump = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 9.1
     boatData.utilities.macerator = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 9.2
     boatData.utilities.showerDrainPump = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 9.3
-    boatData.bilgePumps.midship.on = N2kGetStatusOnBinaryStatus(binaryStatus, offset++);  // 9.4
-    boatData.bilgePumps.midship.floatSwitch = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 9.5
+    boatData.utilities.refrigerator = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 9.4
 
   } else if (instance == E_UTILITIES_ENGINE_ROOM) {
     boatData.utilities.waterPump = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 10.1
     boatData.blower = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 10.2
-    boatData.bilgePumps.engineRoom.on = N2kGetStatusOnBinaryStatus(binaryStatus, offset++);  // 10.3
-    boatData.bilgePumps.engineRoom.floatSwitch = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 10.4
-    boatData.utilities.doorLock = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 10.5
+    boatData.utilities.doorLock = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 10.3
+
+  } else if (instance == E_BILGE_PUMPS) {
+    boatData.bilgePumps.midship.on = N2kGetStatusOnBinaryStatus(binaryStatus, offset++);  // 11.1
+    boatData.bilgePumps.midship.floatSwitch = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 11.2
+    boatData.bilgePumps.engineRoom.on = N2kGetStatusOnBinaryStatus(binaryStatus, offset++);  // 11.3
+    boatData.bilgePumps.engineRoom.floatSwitch = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 11.4
 
   }
 

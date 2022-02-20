@@ -158,10 +158,10 @@ bool newTrimAngle(BowUpDown &side) {
       result = true;
     }
   }
-  if (side.angle < 0.0) {
-    side.angle = 0.0;
-  } else if (side.angle > 10000.0) {
-    side.angle = 10000.0;
+  if (side.angle < -10000.0) {
+    side.angle = -10000.0;
+  } else if (side.angle > 1000.0) {
+    side.angle = 1000.0;
   }
 
   return result;

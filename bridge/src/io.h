@@ -25,8 +25,8 @@
 #define O_STARBOARD_ENGINE_OIL 18
 #define O_STARBOARD_ENGINE_TEMP 19
 
-#define NA_20 20
-#define NA_21 21
+#define I_DRIVE_BOW_DOWN 20
+#define I_DRIVE_BOW_UP 21
 
 #define I_PORT_DRIVE_BOW_DOWN 22
 #define I_PORT_DRIVE_BOW_UP 23
@@ -70,10 +70,12 @@
 #define I_REFRIGERATOR A9
 #define I_SPOT_LIGHT A8
 
+#define I_TRIM_BOW_UP A6
 #define I_PORT_TRIM_BOW_UP A5
 #define I_PORT_TRIM_BOW_DOWN A4
 #define I_STARBOARD_TRIM_BOW_UP A3
 #define I_STARBOARD_TRIM_BOW_DOWN A2
+#define I_TRIM_BOW_DOWN A1
 
 void setupIO();
 bool readIO(BoatData &boatData, SwitchBankInstance instance);

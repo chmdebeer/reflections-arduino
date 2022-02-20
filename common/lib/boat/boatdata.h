@@ -20,6 +20,7 @@ enum SwitchBankInstance {
   E_UTILITIES_CABIN,
   E_UTILITIES_BILGE,
   E_UTILITIES_ENGINE_ROOM,
+  E_BILGE_PUMPS,
   E_SWITCH_BANK_INSTANCES
 };
 
@@ -69,6 +70,7 @@ typedef struct {
   tN2kOnOff start;
   bool ready;
   tN2kOnOff nutraSalt;
+  unsigned long nutraSaltStart;
   int rpm;
   int oilPressure;
   int waterTemperature;

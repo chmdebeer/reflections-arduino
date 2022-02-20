@@ -26,8 +26,8 @@ Bounce * buttons = new Bounce[E_ITEMS];
 DallasTemperature sensors(&oneWire);
 
 uint8_t cabinTemperatureSensorID[8] = { 0x28, 0xFF, 0x10, 0x05, 0x72, 0x17, 0x04, 0xF6 };
-uint8_t engineTemperatureBottomSensorID[8] = { 0x28, 0xFF, 0xD8, 0x17, 0x71, 0x17, 0x04, 0x31 };
-uint8_t engineTemperatureTopSensorID[8] = { 0x28, 0xFF, 0x1F, 0x0B, 0x70, 0x17, 0x04, 0xC3 };
+uint8_t engineTemperatureBottomSensorID[8] = { 0x28, 0xFF, 0x1F, 0x0B, 0x70, 0x17, 0x04, 0xC3 };
+uint8_t engineTemperatureTopSensorID[8] = { 0x28, 0xFF, 0xD8, 0x17, 0x71, 0x17, 0x04, 0x31 };
 
 void setupIO() {
 
@@ -101,11 +101,15 @@ bool readIO(BoatData &boatData, SwitchBankInstance instance) {
     newIO |= readMomentaryButton(buttons[E_PORT_ENGINE_MALFUNCTION], boatData.engines.port.malfunction, true);
     newIO |= readMomentaryButton(buttons[E_STARBOARD_ENGINE_CHECK], boatData.engines.starboard.check, true);
     newIO |= readMomentaryButton(buttons[E_STARBOARD_ENGINE_MALFUNCTION], boatData.engines.starboard.malfunction, true);
-  }
 
-  if (instance == E_UTILITIES_ENGINE_ROOM) {
-    newIO |= readMomentaryButton(buttons[E_DOOR_LOCK], boatData.utilities.doorLock, true);
+  } else if (instance == E_UTILITIES_ENGINE_ROOM) {
+    newIO |= readToggleButton(buttons[E_DOOR_LOCK], boatData.utilities.doorLock);
+    if (newIO) {
+      Serial.print("Lock ");
+      Serial.println(boatData.utilities.doorLock);
+    }
 
+  } else if (instance == E_BILGE_PUMPS) {
     value = analogRead(I_ENGINE_BILGE_PUMP);
     if ((value > 600) && (boatData.bilgePumps.engineRoom.floatSwitch != N2kOnOff_On)) {
       newIO = true;
@@ -115,6 +119,7 @@ bool readIO(BoatData &boatData, SwitchBankInstance instance) {
       newIO = true;
       boatData.bilgePumps.engineRoom.floatSwitch = N2kOnOff_Off;
     }
+
   }
 
   return newIO;
@@ -183,6 +188,8 @@ void setIO(BoatData &boatData, SwitchBankInstance instance) {
     digitalWrite(O_WATER_PUMP, boatData.utilities.waterPump == N2kOnOff_On);
     digitalWrite(O_BILGE_BLOWER_1, boatData.blower == N2kOnOff_On);
     digitalWrite(O_DOOR_LOCK, boatData.utilities.doorLock == N2kOnOff_On);
+
+  } else if (instance == E_BILGE_PUMPS) {
     digitalWrite(O_ENGINE_BILGE_PUMP, boatData.bilgePumps.engineRoom.on == N2kOnOff_On);
 
   }
@@ -190,7 +197,7 @@ void setIO(BoatData &boatData, SwitchBankInstance instance) {
 
 void readSensors(BoatData &boatData) {
   double value;
-  int atdValue;
+  // int atdValue;
 
   sensors.requestTemperatures();
 
@@ -202,6 +209,15 @@ void readSensors(BoatData &boatData) {
 
   value = (double)sensors.getTempC(cabinTemperatureSensorID);
   boatData.environment.insideTemperature = CToKelvin(value);
+
+  value = readAtd(I_PORT_BATTERY, 0, 1023, 0, 1555, 100.0);
+  boatData.batteries.port = value;
+
+  value = readAtd(I_STARBOARD_BATTERY, 0, 1023, 0, 1558, 100.0);
+  boatData.batteries.starboard = value;
+
+  value = readAtd(I_AUX_BATTERY, 0, 1023, 0, 1555, 100.0);
+  boatData.batteries.auxiliary = value;
 
   // Serial.println("");
   // Serial.println("============");
@@ -261,20 +277,13 @@ void readSensors(BoatData &boatData) {
   boatData.engines.starboard.oilPressure = value;
   //
 
-  atdValue = analogRead(I_FUEL);
-  // value = readAtd(I_FUEL, 38, 222, 100, 0, 1.0);
-  value = readAtd(I_FUEL, 45, 900, 100, 0, 1.0);
+  value = readAtd(I_FUEL, 33, 201, 0, 100, 1.0);
+  value = (12.85/boatData.batteries.auxiliary) * value;
+  if (value > 100.0) {
+    value = 100.0;
+  }
+
   boatData.fuel.level = value;
-
-  value = readAtd(I_PORT_BATTERY, 0, 1023, 0, 1555, 100.0);
-  boatData.batteries.port = value;
-
-  value = readAtd(I_STARBOARD_BATTERY, 0, 1023, 0, 1558, 100.0);
-  boatData.batteries.starboard = value;
-
-  value = readAtd(I_AUX_BATTERY, 0, 1023, 0, 1555, 100.0);
-  boatData.batteries.auxiliary = value;
-
 
   // Serial.print("I_STARBOARD_DRIVE_TRIM ");
   // Serial.print(analogRead(I_STARBOARD_DRIVE_TRIM));

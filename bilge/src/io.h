@@ -4,10 +4,10 @@
 #define N2k_CAN_INT_PIN 2
 #define N2k_SPI_CS_PIN 48
 
-#define O_MIDSHIP_BILDGE_LIGHTS 3
-#define O_SHOWER_PUMP 4
+#define O_SHOWER_PUMP 3
+#define O_REFRIGERATOR 4
 #define O_MACERATOR 5
-#define O_MOSFET_4 6
+#define O_MIDSHIP_BILDGE_LIGHTS 6
 
 #define O_BLACKWATER_AIR_PUMP 22
 #define O_MIDSHIP_BILGE 23
@@ -22,8 +22,8 @@
 #define I_MIDSHIP_BILGE A15
 
 void setupIO();
-bool readIO(BoatData &boatData);
-void setIO(BoatData &boatData);
+bool readIO(BoatData &boatData, SwitchBankInstance instance);
+void setIO(BoatData &boatData, SwitchBankInstance instance);
 void readSensors(BoatData &boatData);
 
 #endif

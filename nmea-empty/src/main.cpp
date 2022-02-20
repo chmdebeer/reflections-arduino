@@ -35,6 +35,8 @@ enum timers {
   T_SWITCHES,
   T_ENGINE,
   T_LOCK,
+  T_SYSTEM,
+  T_NUTRASALT,
   T_ITEMS
 };
 
@@ -52,12 +54,22 @@ void setup() {
   setupTimers();
   setupNMEA();
   readRestartCount();
-  // Serial.println(restartCount);
+  Serial.println(boatData.system.egnineRoomRestartCount);
 }
 
 
-void loop() {
+void processTrim() {
   tN2kMsg N2kMsg;
+
+  if (newTrimAngle(boatData.trim.port) || newTrimAngle(boatData.trim.starboard)) {
+    Serial.println((int8_t)(boatData.trim.port.angle / 100.0));
+    Serial.println((int8_t)(boatData.trim.starboard.angle / 100.0));
+    SetN2kTrimTab(N2kMsg, (int8_t)(boatData.trim.port.angle / 100.0), (int8_t)(boatData.trim.starboard.angle / 100.0));
+    NMEA2000.SendMsg(N2kMsg);
+  }
+}
+
+void loop() {
 
   NMEA2000.ParseMessages();
 
@@ -65,12 +77,6 @@ void loop() {
 
     // sendN2kBinaryStatus();
     // delay(500);
-  if (newTrimAngle(boatData.trim.port) || newTrimAngle(boatData.trim.starboard)) {
-    Serial.println((int8_t)(boatData.trim.port.angle / 100.0));
-    Serial.println((int8_t)(boatData.trim.starboard.angle / 100.0));
-    SetN2kTrimTab(N2kMsg, (int8_t)(boatData.trim.port.angle / 100.0), (int8_t)(boatData.trim.starboard.angle / 100.0));
-    NMEA2000.SendMsg(N2kMsg);
-  }
 
   TimerManager::instance().update();
 
@@ -85,7 +91,7 @@ void setupNMEA() {
 
   NMEA2000.SetForwardStream(&Serial);
   NMEA2000.SetForwardType(tNMEA2000::fwdt_Text);
-  NMEA2000.EnableForward(false);
+  // NMEA2000.EnableForward(false);
 
   NMEA2000.SetMode(tNMEA2000::N2km_ListenAndNode, 11);
 
@@ -107,8 +113,14 @@ void setupTimers() {
   timers[T_SEND_SENSOR_DATA].setInterval(1003);
   timers[T_SEND_SENSOR_DATA].setCallback(sendN2kSensorData);
 
-  timers[T_ENGINE].setInterval(200);
+  timers[T_ENGINE].setInterval(20000);
   timers[T_ENGINE].setCallback(sendEngine);
+
+  timers[T_SYSTEM].setInterval(2000);
+  timers[T_SYSTEM].setCallback(sendN2kSystemStatus);
+
+  timers[T_NUTRASALT].setInterval(1000);
+  timers[T_NUTRASALT].setCallback(sendN2kFuelConsumption);
 
   TimerManager::instance().start();
   timers[T_NEW_DEVICE].stop();
@@ -179,6 +191,16 @@ void setIO(BoatData &boatData, SwitchBankInstance instance) {
     Serial.println(boatData.engines.port.nutraSalt == N2kOnOff_On ? " On" : " Off");
     Serial.print("boatData.engines.starboard.nutraSalt");
     Serial.println(boatData.engines.starboard.nutraSalt == N2kOnOff_On ? " On" : " Off");
+    if ((boatData.engines.port.nutraSalt == N2kOnOff_On) && (boatData.engines.port.nutraSaltStart == 0)) {
+      boatData.engines.port.nutraSaltStart = millis();
+    } else if ((boatData.engines.port.nutraSalt == N2kOnOff_Off) && (boatData.engines.port.nutraSaltStart > 0)) {
+      sendN2kNutraSaltCountdown(0, boatData.engines.port, true);
+    }
+    if ((boatData.engines.starboard.nutraSalt == N2kOnOff_On) && (boatData.engines.starboard.nutraSaltStart == 0)) {
+      boatData.engines.starboard.nutraSaltStart = millis();
+    } else if ((boatData.engines.starboard.nutraSalt == N2kOnOff_Off) && (boatData.engines.starboard.nutraSaltStart > 0)) {
+      sendN2kNutraSaltCountdown(1, boatData.engines.starboard, true);
+    }
 
   } else if (instance == E_LIGHTS) {
     // boatData.lights.instruments // 6.1
@@ -341,8 +363,6 @@ void sendN2kBinaryStatus() {
 
   delay(N2K_DELAY_BETWEEN_SEND);
 
-  boatData.system.egnineRoomRestartCount = 4000;
-
   binaryStatus_11 = binaryStatusFromBoatData(11, boatData);
   SetN2kBinaryStatus(N2kMsg, 11, binaryStatus_11);
   NMEA2000.SendMsg(N2kMsg);
@@ -357,6 +377,53 @@ void sendN2kSystemStatus() {
   SetN2kReflectionsResetCount(N2kMsg, 11, boatData.system.egnineRoomRestartCount);
   NMEA2000.SendMsg(N2kMsg);
 }
+
+void n2kBinaryStatus(SwitchBankInstance instance) {
+  tN2kMsg N2kMsg;
+  tN2kBinaryStatus binaryStatus;
+
+  binaryStatus = binaryStatusFromBoatData(instance, boatData);
+  SetN2kBinaryStatus(N2kMsg, (unsigned char)instance, binaryStatus);
+  NMEA2000.SendMsg(N2kMsg);
+}
+
+void sendN2kNutraSaltCountdown(unsigned char instance, Engine &engine, bool reset = false) {
+  tN2kMsg N2kMsg;
+  unsigned int count;
+  unsigned int countdown;
+
+  if ((engine.nutraSaltStart > 0) && ((engine.nutraSalt == N2kOnOff_On) || reset)) {
+    count = millis() - engine.nutraSaltStart;
+    if (count < 45000) {
+      countdown = (45000 - count) / 1000;
+    } else {
+      countdown = 0;
+      engine.nutraSalt = N2kOnOff_Off;
+      engine.ignition = N2kOnOff_Off;
+      engine.nutraSaltStart = 0;
+      // setIO(boatData, E_IGNITION_START);
+      n2kBinaryStatus(E_IGNITION_START);
+      // setIO(boatData, E_NUTRASALT);
+      n2kBinaryStatus(E_NUTRASALT);
+    }
+    if (reset) {
+      countdown = 0;
+      engine.nutraSaltStart = 0;
+      Serial.println("resetting");
+    }
+    Serial.print(instance);
+    Serial.print(" - NutraSalt countdown ");
+    Serial.println(countdown);
+    SetN2kReflectionsPGN130981(N2kMsg, instance, countdown);
+    NMEA2000.SendMsg(N2kMsg);
+  }
+}
+
+void processNutraSalt() {
+  sendN2kNutraSaltCountdown(0, boatData.engines.port);
+  sendN2kNutraSaltCountdown(1, boatData.engines.starboard);
+}
+
 
 void sendN2kACStatus() {
   tN2kMsg N2kMsg;
@@ -440,6 +507,36 @@ void sendEngine() {
   // delay(N2K_DELAY_BETWEEN_SEND);
   SetN2kEngineParamRapid(N2kMsgRapidStarboard, 1, boatData.engines.starboard.rpm, 0.0, boatData.engines.starboard.trim.angle);
   NMEA2000.SendMsg(N2kMsgRapidStarboard);
+
+}
+
+
+void sendN2kFuelConsumption() {
+  tN2kMsg N2kMsgPort;
+  tN2kMsg N2kMsgStarboard;
+
+  // SetN2kPGN127497(N2kMsgPort, 0, 2, 0.3, 0.4, 0.5);
+  // NMEA2000.SendMsg(N2kMsgPort);
+  //
+  // SetN2kPGN127497(N2kMsgStarboard, 1, 6, 0.7, 0.8, 0.9);
+  // NMEA2000.SendMsg(N2kMsgStarboard);
+
+  SetN2kPGN127489(N2kMsgPort, 0, 0, 0, 0, 0, 0.6, 0, 0, 0, 0, 0,
+    false,
+    false, false, false, false, false, false,
+    false, false, false, false, false, false,
+    false, false, false, false, false, false,
+    false, false, false, false, false
+  );
+  NMEA2000.SendMsg(N2kMsgPort);
+  SetN2kPGN127489(N2kMsgStarboard, 1, 0, 0, 0, 0, 0.7, 0, 0, 0, 0, 0,
+    false,
+    false, false, false, false, false, false,
+    false, false, false, false, false, false,
+    false, false, false, false, false, false,
+    false, false, false, false, false
+  );
+  NMEA2000.SendMsg(N2kMsgStarboard);
 
 }
 

@@ -1,8 +1,7 @@
 #include <Arduino.h>
-#include <Wire.h>
+#include <SPI.h>
+#include <MFRC522.h>
 #include <rfid.h>
-#include <PN532_I2C.h>
-#include <PN532.h>
 
 byte readCard[4];
 byte lastCard[4];
@@ -18,32 +17,11 @@ byte storedCard[9][4] = {
   {0x89, 0x1E, 0x68, 0x8E}
 };
 
-PN532_I2C pn532I2C(Wire);
-PN532 nfc(pn532I2C);
+MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance.
 
 void setupRFID() {
-  nfc.begin();
-
-  uint32_t versiondata = nfc.getFirmwareVersion();
-  if (! versiondata) {
-    Serial.print("Didn't find PN53x board");
-    while (1); // halt
-  }
-
-  // Got ok data, print it out!
-  Serial.print("Found chip PN5"); Serial.println((versiondata>>24) & 0xFF, HEX);
-  Serial.print("Firmware ver. "); Serial.print((versiondata>>16) & 0xFF, DEC);
-  Serial.print('.'); Serial.println((versiondata>>8) & 0xFF, DEC);
-
-  // Set the max number of retry attempts to read from a card
-  // This prevents us from waiting forever for a card, which is
-  // the default behaviour of the PN532.
-  nfc.setPassiveActivationRetries(0xFF);
-
-  // configure board to read RFID tags
-  nfc.SAMConfig();
-
-  Serial.println("Waiting for an ISO14443A card");
+  SPI.begin();      // Initiate  SPI bus
+  mfrc522.PCD_Init();   // Initiate MFRC522
 }
 
 void dump_byte_array(byte *buffer, byte bufferSize) {
@@ -63,38 +41,33 @@ bool checkTwo ( byte a[], byte b[] ) {
 }
 
 bool readRFID () {
-  boolean success;
-  uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };
-  static uint8_t lastUid[] = { 0, 0, 0, 0, 0, 0, 0 };
-  uint8_t uidLength;
+  uint8_t uid[] = { 0, 0, 0, 0 };
+  uint8_t uidLength = 4;
 
-  success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, &uid[0], &uidLength, 100);
+  // Look for new cards
+  if (mfrc522.PICC_IsNewCardPresent()) {
+    if (mfrc522.PICC_ReadCardSerial()) {
+      uidLength = mfrc522.uid.size;
 
-  if (success) {
-    // if (checkTwo(uid, lastUid)) {
-    //   return false;
-    // }
-    // for (uint8_t i=0; i < uidLength; i++) {
-    //   lastUid[i] = uid[i];
-    // }
-
-    Serial.println("Found a card!");
-    Serial.print("UID Length: ");Serial.print(uidLength, DEC);Serial.println(" bytes");
-    Serial.print("UID Value: ");
-    for (uint8_t i=0; i < uidLength; i++)
-    {
-      Serial.print(" 0x");Serial.print(uid[i], HEX);
-    }
-    Serial.println("");
-
-    for ( uint8_t c = 0; c < 9; c++) {  //
-      if (checkTwo(storedCard[c], uid)) {
-        return true;
+      Serial.print("UID tag :");
+      for (byte i = 0; i < uidLength; i++)
+      {
+        uid[i] = mfrc522.uid.uidByte[i];
+        Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
+        Serial.print(mfrc522.uid.uidByte[i], HEX);
       }
+      Serial.println();
+      mfrc522.PICC_HaltA();
+      mfrc522.PCD_StopCrypto1();
+
+      for ( uint8_t c = 0; c < 9; c++) {  //
+        if (checkTwo(storedCard[c], uid)) {
+          return true;
+        }
+      }
+
     }
   }
-  for (uint8_t i=0; i < uidLength; i++) {
-    lastUid[i] = 0;
-  }
+
   return false;
 }

@@ -101,7 +101,6 @@ void setupIO() {
 
   pinMode(O_INSTRUMENT_LIGHTS, OUTPUT);
   pinMode(O_BATHROOM_LIGHTS, OUTPUT);
-  pinMode(O_BATHROOM_LIGHTS, OUTPUT);
   pinMode(O_MOSFET_4, OUTPUT);
 
 }
@@ -215,7 +214,6 @@ bool readIO(BoatData &boatData, SwitchBankInstance instance) {
     // boatData.utilities.fmRadio // 8.6
 
     newIO |= readToggleButton(buttons[E_FM_RADIO], boatData.utilities.fmRadio);
-    newIO |= readToggleButton(buttons[E_REFRIGERATOR], boatData.utilities.refrigerator);
 
     buttons[E_HORN].update();
     if (buttons[E_HORN].fell()) {
@@ -241,20 +239,24 @@ bool readIO(BoatData &boatData, SwitchBankInstance instance) {
       }
     }
 
-  } else if ((instance == E_UTILITIES_BILGE) || (instance == E_UTILITIES_ENGINE_ROOM)) {
+  } else if (instance == E_UTILITIES_BILGE) {
     // boatData.utilities.blackwaterAirPump // 9.1
     // boatData.utilities.macerator // 9.2
     // boatData.utilities.showerDrainPump // 9.3
-    // boatData.bilgePumps.midship.on // 9.4
-    // boatData.bilgePumps.midship.floatSwitch // 9.5
+    // boatData.utilities.refrigerator // 9.4
+    newIO |= readToggleButton(buttons[E_REFRIGERATOR], boatData.utilities.refrigerator);
 
+
+  } else if (instance == E_UTILITIES_ENGINE_ROOM) {
     // boatData.utilities.waterPump // 10.1
     // boatData.blower // 10.2
-    // boatData.bilgePumps.engineRoom.on // 10.3
-    // boatData.bilgePumps.engineRoom.floatSwitch // 10.4
-    // boatData.utilities.doorLock // 10.5
-
+    // boatData.utilities.doorLock // 10.3
     newIO |= readToggleButton(buttons[E_WATER_PUMP], boatData.utilities.waterPump);
+    newIO |= readToggleButton(buttons[E_BILGE_BLOWER], boatData.blower);
+
+  } else if (instance == E_BILGE_PUMPS) {
+    // boatData.bilgePumps.midship.on // 11.1
+    // boatData.bilgePumps.midship.floatSwitch // 11.2
 
     buttons[E_BILGE_PUMP].update();
     if (buttons[E_BILGE_PUMP].fell()) {
@@ -269,7 +271,6 @@ bool readIO(BoatData &boatData, SwitchBankInstance instance) {
       }
     }
 
-    newIO |= readToggleButton(buttons[E_BILGE_BLOWER], boatData.blower);
   }
 
   return newIO;
@@ -343,17 +344,19 @@ void setIO(BoatData &boatData, SwitchBankInstance instance) {
     // boatData.utilities.blackwaterAirPump // 9.1
     // boatData.utilities.macerator // 9.2
     // boatData.utilities.showerDrainPump // 9.3
-    // boatData.bilgePumps.midship.on // 9.4
-    // boatData.bilgePumps.midship.floatSwitch // 9.5
 
   } else if (instance == E_UTILITIES_ENGINE_ROOM) {
     // boatData.utilities.waterPump // 10.1
     // boatData.blower // 10.2
+    // boatData.utilities.doorLock // 10.3
+    digitalWrite(O_BILGE_BLOWER, (boatData.blower == N2kOnOff_On));
+    
+  } else if (instance == E_BILGE_PUMPS) {
+    // boatData.bilgePumps.midship.on // 9.4
+    // boatData.bilgePumps.midship.floatSwitch // 9.5
     // boatData.bilgePumps.engineRoom.on // 10.3
     // boatData.bilgePumps.engineRoom.floatSwitch // 10.4
-    // boatData.utilities.doorLock // 10.5
 
-    digitalWrite(O_BILGE_BLOWER, (boatData.blower == N2kOnOff_On));
     digitalWrite(O_BILGE_PUMP, (
       (boatData.bilgePumps.engineRoom.on == N2kOnOff_On) || (boatData.bilgePumps.midship.on == N2kOnOff_On) ||
       (boatData.bilgePumps.engineRoom.floatSwitch == N2kOnOff_On) || (boatData.bilgePumps.midship.floatSwitch == N2kOnOff_On)
@@ -389,8 +392,4 @@ void readAC(BoatData &boatData) {
       data++;
     }
   }
-  Serial.print("Volts ");
-  Serial.println(boatData.ac.volts);
-  Serial.print("Amps ");
-  Serial.println(boatData.ac.amps);
 }
