@@ -125,7 +125,7 @@ void setupTimers() {
   timers[T_SEND_SENSOR_DATA].setInterval(900);
   timers[T_SEND_SENSOR_DATA].setCallback(sendN2kSensorData);
 
-  timers[T_SEND_STEERING_DATA].setInterval(1119);
+  timers[T_SEND_STEERING_DATA].setInterval(519);
   timers[T_SEND_STEERING_DATA].setCallback(sendN2kSteeringData);
 
   timers[T_ENGINE].setInterval(2033);
@@ -384,23 +384,32 @@ void sendN2kNutraSaltCountdown(unsigned char instance, Engine &engine, bool rese
 
   if ((engine.nutraSaltStart > 0) && ((engine.nutraSalt == N2kOnOff_On) || reset)) {
     count = millis() - engine.nutraSaltStart;
-    if (count < 45000) {
-      countdown = (45000 - count) / 1000;
-    } else {
-      countdown = 0;
-      engine.nutraSalt = N2kOnOff_Off;
+
+    if (count > 0) {
+      countdown = (26000 - count) / 1000;
+    }
+
+    if (count > 25000) {
       engine.ignition = N2kOnOff_Off;
       engine.nutraSaltStart = 0;
       setIO(boatData, E_IGNITION_START);
       n2kBinaryStatus(E_IGNITION_START);
+    }
+
+    if (count > 26000) {
+      engine.nutraSalt = N2kOnOff_Off;
+      countdown = 0;
+      engine.nutraSaltStart = 0;
       setIO(boatData, E_NUTRASALT);
       n2kBinaryStatus(E_NUTRASALT);
     }
+    
     if (reset) {
       countdown = 0;
       engine.nutraSaltStart = 0;
       Serial.println("resetting");
     }
+
     Serial.print(instance);
     Serial.print(" - NutraSalt countdown ");
     Serial.println(countdown);
