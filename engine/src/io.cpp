@@ -195,9 +195,26 @@ void setIO(BoatData &boatData, SwitchBankInstance instance) {
   }
 }
 
-void readSensors(BoatData &boatData) {
+void readSteering(BoatData &boatData) {
   double value;
-  // int atdValue;
+  value = readAtd(I_STEERING_ANGLE, 8, 198, 7854, -7854, 10000.0);
+  boatData.engines.port.steering = value;
+}
+
+void readBatteries(BoatData &boatData) {
+  double value;
+  value = readAtd(I_PORT_BATTERY, 0, 1023, 0, 1555, 100.0);
+  boatData.batteries.port = value;
+
+  value = readAtd(I_STARBOARD_BATTERY, 0, 1023, 0, 1558, 100.0);
+  boatData.batteries.starboard = value;
+
+  value = readAtd(I_AUX_BATTERY, 0, 1023, 0, 1555, 100.0);
+  boatData.batteries.auxiliary = value;
+}
+
+void readTemperatures(BoatData &boatData) {
+  double value;
 
   sensors.requestTemperatures();
 
@@ -209,97 +226,40 @@ void readSensors(BoatData &boatData) {
 
   value = (double)sensors.getTempC(cabinTemperatureSensorID);
   boatData.environment.insideTemperature = CToKelvin(value);
+}
 
-  value = readAtd(I_PORT_BATTERY, 0, 1023, 0, 1555, 100.0);
-  boatData.batteries.port = value;
+void readFuel(BoatData &boatData) {
+  double value;
 
-  value = readAtd(I_STARBOARD_BATTERY, 0, 1023, 0, 1558, 100.0);
-  boatData.batteries.starboard = value;
+  value = readAtd(I_FUEL, 33, 201, 0, 100, 1.0);
+  boatData.fuel.level = value;
+}
 
-  value = readAtd(I_AUX_BATTERY, 0, 1023, 0, 1555, 100.0);
-  boatData.batteries.auxiliary = value;
+void readEngines(BoatData &boatData) {
+  double value;
 
-  // Serial.println("");
-  // Serial.println("============");
-  // Serial.print("I_PORT_ENGINE_TEMP ");
-  // Serial.print(analogRead(I_PORT_ENGINE_TEMP));
-  // Serial.print(" ");
   value = readAtd(I_PORT_ENGINE_TEMP, 0, 560, 90, 0, 1.0);
-  // Serial.println(value);
   boatData.engines.port.waterTemperature = CToKelvin(value);
-  // Serial.print("I_PORT_ENGINE_OIL ");
-  // Serial.print(analogRead(I_PORT_ENGINE_OIL));
-  // Serial.print(" ");
+
   value = readAtd(I_PORT_ENGINE_OIL, 0, 122, 822, 0, 1.0);
-  // Serial.println(value);
   boatData.engines.port.oilPressure = value;
-  //
-  // Serial.print("I_PORT_DRIVE_TRIM ");
-  // Serial.print(analogRead(I_PORT_DRIVE_TRIM));
-  // Serial.print(" ");
+
   value = readAtd(I_PORT_DRIVE_TRIM, 0, 80, 0, 40, 1.0);
-  // Serial.println(value);
   boatData.engines.port.trim.angle = value;
 
   // Serial.print("I_PORT_ENGINE_ALARM ");
   // Serial.println(digitalRead(I_PORT_ENGINE_MALFUNCTION));
   // Serial.print("I_PORT_ENGINE_CHECK_LIGHT ");
   // Serial.println(digitalRead(I_PORT_ENGINE_CHECK));
-  //
-  // Serial.println("");
-  // Serial.print("I_STARBOARD_ENGINE_TEMP ");
-  // Serial.print(" ");
-  // Serial.print(analogRead(I_STARBOARD_ENGINE_TEMP));
-  // Serial.print(" ");
+
   value = readAtd(I_STARBOARD_ENGINE_TEMP, 0, 560, 90, 0, 1.0);
-  // Serial.println(value);
   boatData.engines.starboard.waterTemperature = CToKelvin(value);
-  //
-  // I_PORT_ENGINE_TEMP 311 - 346    26 336   36 342   41   343      57  178
-  // I_PORT_ENGINE_OIL 203 - 223     652  24     620 30
-  // I_PORT_DRIVE_TRIM 832 - 921     54 26     19  44
-  // I_PORT_ENGINE_ALARM 1
-  // I_PORT_ENGINE_CHECK_LIGHT 1
-    //
 
-    // I_STARBOARD_ENGINE_TEMP 340    22 304    37  349    45   331     72  117
-    // I_STARBOARD_ENGINE_OIL 218    748 11    668   15
-    // I_STARBOARD_DRIVE_TRIM 889    14  6    21  41
-    // I_STARBOARD_ENGINE_ALARM 1
-    // I_STARBOARD_ENGINE_CHECK_LIGHT 1
-
-
-  // Serial.print("I_STARBOARD_ENGINE_OIL ");
-  // Serial.print(analogRead(I_STARBOARD_ENGINE_OIL));
-  // Serial.print(" ");
   value = readAtd(I_STARBOARD_ENGINE_OIL, 0, 122, 822, 0, 1.0);
-  // Serial.println(value);
   boatData.engines.starboard.oilPressure = value;
-  //
 
-  value = readAtd(I_FUEL, 33, 201, 0, 100, 1.0);
-  value = (12.85/boatData.batteries.auxiliary) * value;
-  if (value > 100.0) {
-    value = 100.0;
-  }
 
-  boatData.fuel.level = value;
-
-  // Serial.print("I_STARBOARD_DRIVE_TRIM ");
-  // Serial.print(analogRead(I_STARBOARD_DRIVE_TRIM));
-  // Serial.print(" ");
   value = readAtd(I_STARBOARD_DRIVE_TRIM, 0, 80, 0, 40, 1.0);
-  // Serial.println(value);
   boatData.engines.starboard.trim.angle = value;
-
-
-
-  // Serial.print("I_STARBOARD_ENGINE_ALARM ");
-  // Serial.println(digitalRead(I_STARBOARD_ENGINE_MALFUNCTION));
-  // Serial.print("I_STARBOARD_ENGINE_CHECK_LIGHT ");
-  // Serial.println(digitalRead(I_STARBOARD_ENGINE_CHECK));
-
-  value = readAtd(I_STEERING_ANGLE, 8, 198, 7854, -7854, 10000.0);
-  boatData.engines.port.steering = value;
 
 }

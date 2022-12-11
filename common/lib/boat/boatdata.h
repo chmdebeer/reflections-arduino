@@ -72,7 +72,7 @@ typedef struct {
   tN2kOnOff nutraSalt;
   unsigned long nutraSaltStart;
   int rpm;
-  int oilPressure;
+  double oilPressure;
   int waterTemperature;
   BowUpDown trim;
   double steering;

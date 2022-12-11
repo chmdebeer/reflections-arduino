@@ -14,6 +14,15 @@
     },
     {
       "path": "engine"
+    },
+    {
+      "path": "common"
+    },
+    {
+      "path": "bluetooth"
+    },
+    {
+      "path": "bilge"
     }
   ],
   "settings": {}

@@ -15,8 +15,11 @@ void newDevice();
 void n2kBinaryStatus(SwitchBankInstance instance);
 void sendN2kSystemStatus();
 
-void readSensors();
-void sendN2kSensorData();
+void sendSteeringData();
+void sendBatteryData();
+void sendTemperatureData();
+void sendFuelData();
+void sendEngineData();
 
 void handleEngineRPM(const tN2kMsg &N2kMsg);
 void handleEngineDynamicParameters(const tN2kMsg &N2kMsg);
@@ -26,4 +29,3 @@ void processTrim();
 void sendN2kTrimTab();
 void sendN2kNutraSaltCountdown(unsigned char instance, Engine &engine, bool reset);
 void sendN2kEngineRPM();
-void sendN2kSteeringData();

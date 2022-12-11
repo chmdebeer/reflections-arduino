@@ -89,6 +89,10 @@
 void setupIO();
 bool readIO(BoatData &boatData, SwitchBankInstance instance);
 void setIO(BoatData &boatData, SwitchBankInstance instance);
-void readSensors(BoatData &boatData);
+void readSteering(BoatData &boatData);
+void readBatteries(BoatData &boatData);
+void readTemperatures(BoatData &boatData);
+void readFuel(BoatData &boatData);
+void readEngines(BoatData &boatData);
 
 #endif

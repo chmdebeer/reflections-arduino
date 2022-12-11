@@ -32,10 +32,12 @@ tNMEA2000Handler NMEA2000Handlers[]={
 enum timers {
   T_NEW_DEVICE,
   T_SYSTEM,
-  T_READ_SENSOR_DATA,
-  T_SEND_SENSOR_DATA,
   T_SEND_STEERING_DATA,
-  T_ENGINE,
+  T_SEND_BATTERY_DATA,
+  T_SEND_TEMPERATURE_DATA,
+  T_SEND_FUEL_DATA,
+  T_SEND_ENGINE_DATA,
+  T_SEND_ENGINE_RPM,
   T_NUTRASALT,
   T_ITEMS
 };
@@ -119,18 +121,23 @@ void setupTimers() {
   timers[T_SYSTEM].setInterval(20011);
   timers[T_SYSTEM].setCallback(sendN2kSystemStatus);
 
-  timers[T_READ_SENSOR_DATA].setInterval(5007);
-  timers[T_READ_SENSOR_DATA].setCallback(readSensors);
+  timers[T_SEND_STEERING_DATA].setInterval(533);
+  timers[T_SEND_STEERING_DATA].setCallback(sendSteeringData);
 
-  timers[T_SEND_SENSOR_DATA].setInterval(900);
-  timers[T_SEND_SENSOR_DATA].setCallback(sendN2kSensorData);
+  timers[T_SEND_BATTERY_DATA].setInterval(2055);
+  timers[T_SEND_BATTERY_DATA].setCallback(sendBatteryData);
 
-  timers[T_SEND_STEERING_DATA].setInterval(519);
-  timers[T_SEND_STEERING_DATA].setCallback(sendN2kSteeringData);
+  timers[T_SEND_TEMPERATURE_DATA].setInterval(5055);
+  timers[T_SEND_TEMPERATURE_DATA].setCallback(sendTemperatureData);
 
-  timers[T_ENGINE].setInterval(2033);
-  timers[T_ENGINE].setCallback(sendN2kEngineRPM);
+  timers[T_SEND_FUEL_DATA].setInterval(3077);
+  timers[T_SEND_FUEL_DATA].setCallback(sendFuelData);
 
+  timers[T_SEND_ENGINE_DATA].setInterval(15099);
+  timers[T_SEND_ENGINE_DATA].setCallback(sendEngineData);
+
+  timers[T_SEND_ENGINE_RPM].setInterval(2033);
+  timers[T_SEND_ENGINE_RPM].setCallback(sendN2kEngineRPM);
 
   timers[T_NUTRASALT].setInterval(1000);
   timers[T_NUTRASALT].setCallback(processNutraSalt);
@@ -190,15 +197,22 @@ void sendN2kSystemStatus() {
   NMEA2000.SendMsg(N2kMsg);
 }
 
-void readSensors() {
-  readSensors(boatData);
+void sendSteeringData() {
+  tN2kMsg N2kMsg_Port;
+
+  readSteering(boatData);
+
+  SetN2kPGN127245(N2kMsg_Port, boatData.engines.port.steering, 0, N2kRDO_NoDirectionOrder, 0.0);
+  NMEA2000.SendMsg(N2kMsg_Port);
 }
 
-void sendN2kSensorData() {
-  static int sensorIndex = 0;
+void sendBatteryData() {
+  static int index = 0;
   tN2kMsg N2kMsg;
 
-  switch (sensorIndex) {
+  readBatteries(boatData);
+
+  switch (index) {
     case 1:
       SetN2kDCBatStatus(N2kMsg, 0, boatData.batteries.port, 0, 0, 1);
       NMEA2000.SendMsg(N2kMsg);
@@ -211,57 +225,84 @@ void sendN2kSensorData() {
       SetN2kDCBatStatus(N2kMsg, 2, boatData.batteries.auxiliary, 0, 0, 1);
       NMEA2000.SendMsg(N2kMsg);
       break;
-    case 4:
-      SetN2kTemperature(N2kMsg, 1, 0, N2kts_EngineRoomTemperature, boatData.engines.engineRoomTemperatureBottom);
-      NMEA2000.SendMsg(N2kMsg);
-      break;
-    case 5:
-      SetN2kTemperature(N2kMsg, 1, 1, N2kts_EngineRoomTemperature, boatData.engines.engineRoomTemperatureTop);
-      NMEA2000.SendMsg(N2kMsg);
-      break;
-    case 6:
-      SetN2kTemperature(N2kMsg, 1, 1, N2kts_InsideTemperature, boatData.environment.insideTemperature);
-      NMEA2000.SendMsg(N2kMsg);
-      break;
-    case 7:
-      SetN2kFluidLevel(N2kMsg, 1, N2kft_Fuel, boatData.fuel.level, 1200.0);
-      NMEA2000.SendMsg(N2kMsg);
-      break;
     default:
-      sensorIndex = 0;
+      index = 0;
       break;
   }
 
-  ++sensorIndex;
+  ++index;
+}
+
+void sendTemperatureData() {
+  static int index = 0;
+  tN2kMsg N2kMsg;
+
+  readTemperatures(boatData);
+
+  switch (index) {
+    case 1:
+      SetN2kTemperature(N2kMsg, 1, 0, N2kts_EngineRoomTemperature, boatData.engines.engineRoomTemperatureBottom);
+      NMEA2000.SendMsg(N2kMsg);
+      break;
+    case 2:
+      SetN2kTemperature(N2kMsg, 1, 1, N2kts_EngineRoomTemperature, boatData.engines.engineRoomTemperatureTop);
+      NMEA2000.SendMsg(N2kMsg);
+      break;
+    case 3:
+      SetN2kTemperature(N2kMsg, 1, 1, N2kts_InsideTemperature, boatData.environment.insideTemperature);
+      NMEA2000.SendMsg(N2kMsg);
+      break;
+    default:
+      index = 0;
+      break;
+  }
+
+  ++index;
+}
+
+void sendFuelData() {
+  tN2kMsg N2kMsg;
+
+  readFuel(boatData);
+
+  SetN2kFluidLevel(N2kMsg, 1, N2kft_Fuel, boatData.fuel.level, 1200.0);
+  NMEA2000.SendMsg(N2kMsg);
+}
+
+void sendEngineData() {
+  tN2kMsg N2kMsg;
+
+  // readEngines(boatData);
+
 }
 
 void handleEngineRPM(const tN2kMsg &N2kMsg) {
   unsigned char instance;
-  // int servoValue;
   double rpm=0.0;
   double boost=0.0;
   int8_t trim=0;
-
-  // N2kMsg.Print(&Serial);
 
   if (ParseN2kEngineParamRapid(N2kMsg, instance, rpm, boost, trim) ) {
     if (instance == 0) {
       if (N2kMsg.Source == 1) {
         boatData.engines.starboard.rpm = (int)rpm;
+        boatData.engines.starboard.trim.angle = (int)trim;
         starboardEngineRpmTime = millis();
       } else {
         boatData.engines.port.rpm = (int)rpm;
+        boatData.engines.port.trim.angle = (int)trim;
         portEngineRpmTime = millis();
       }
     } else if (instance == 1) {
       boatData.engines.starboard.rpm = (int)rpm;
+      boatData.engines.starboard.trim.angle = (int)trim;
       starboardEngineRpmTime = millis();
     }
   }
 }
 
 void handleEngineDynamicParameters(const tN2kMsg &N2kMsg) {
-  unsigned char EngineInstance;
+  unsigned char instance;
   double EngineOilPress;
   double EngineOilTemp;
   double EngineCoolantTemp;
@@ -272,13 +313,19 @@ void handleEngineDynamicParameters(const tN2kMsg &N2kMsg) {
   double EngineFuelPress;
   int8_t EngineLoad;
   int8_t EngineTorque;
+  unsigned int value;
 
-  if (ParseN2kEngineDynamicParam(N2kMsg, EngineInstance, EngineOilPress, EngineOilTemp, EngineCoolantTemp,
+  if (ParseN2kEngineDynamicParam(N2kMsg, instance, EngineOilPress, EngineOilTemp, EngineCoolantTemp,
       AltenatorVoltage, FuelRate, EngineHours, EngineCoolantPress, EngineFuelPress, EngineLoad, EngineTorque) ) {
-    if (EngineInstance == 0) {
+    if (instance == 0) {
+      if (N2kMsg.Source == 1) {
+        boatData.engines.starboard.oilPressure = EngineOilPress;
+        boatData.engines.starboard.waterTemperature = KelvinToC(EngineCoolantTemp);
+      } else {
       boatData.engines.port.oilPressure = EngineOilPress;
       boatData.engines.port.waterTemperature = KelvinToC(EngineCoolantTemp);
-    } else if (EngineInstance == 1) {
+      }
+    } else if (instance == 1) {
       boatData.engines.starboard.oilPressure = EngineOilPress;
       boatData.engines.starboard.waterTemperature = KelvinToC(EngineCoolantTemp);
     }
@@ -296,13 +343,6 @@ void processTrim() {
     SetN2kTrimTab(N2kMsg, (int8_t)(boatData.trim.port.angle / 100.0), (int8_t)(boatData.trim.starboard.angle / 100.0));
     NMEA2000.SendMsg(N2kMsg);
   }
-}
-
-void sendN2kSteeringData() {
-  tN2kMsg N2kMsg_Port;
-
-  SetN2kPGN127245(N2kMsg_Port, boatData.engines.port.steering, 0, N2kRDO_NoDirectionOrder, 0.0);
-  NMEA2000.SendMsg(N2kMsg_Port);
 }
 
 void sendN2kTrimTab() {
@@ -391,7 +431,6 @@ void sendN2kNutraSaltCountdown(unsigned char instance, Engine &engine, bool rese
 
     if (count > 25000) {
       engine.ignition = N2kOnOff_Off;
-      engine.nutraSaltStart = 0;
       setIO(boatData, E_IGNITION_START);
       n2kBinaryStatus(E_IGNITION_START);
     }
