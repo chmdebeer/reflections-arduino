@@ -8,6 +8,7 @@ void setupTimers();
 
 void handleNMEA2000Msg(const tN2kMsg &N2kMsg);
 void handleBinaryStatus(const tN2kMsg &N2kMsg);
+void handleThruster(const tN2kMsg &N2kMsg);
 void handleAddressClaim(const tN2kMsg &N2kMsg);
 
 void newDevice();

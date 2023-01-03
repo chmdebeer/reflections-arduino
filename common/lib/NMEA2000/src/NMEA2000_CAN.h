@@ -1,7 +1,7 @@
 /*
 NMEA2000_CAN.h
 
-Copyright (c) 2015-2018 Timo Lappalainen, Kave Oy, www.kave.fi
+Copyright (c) 2015-2022 Timo Lappalainen, Kave Oy, www.kave.fi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -26,11 +26,42 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   library by adding one of next defines before including NMEA2000_CAN.h:
   #define USE_N2K_CAN 1  // for use with SPI and MCP2515 can bus controller
   #define USE_N2K_CAN 2  // for use with due based CAN
-  #define USE_N2K_CAN 3  // for use with Teensy 3.1/3.2 boards
+  #define USE_N2K_CAN 3  // for use with Teensy 3.1/3.2/3.5/3.6 boards
   #define USE_N2K_CAN 4  // for use with avr boards
   #define USE_N2K_CAN 5  // for use with socketCAN (linux, etc) systems
   #define USE_N2K_CAN 6  // for use with MBED (ARM) systems
   #define USE_N2K_CAN 7  // for use with ESP32
+  #define USE_N2K_CAN 8  // for use with Teensy 3.1/3.2/3.5/3.6/4.0/4.1 boards
+  
+  Depending of your board you will need to also install "driver" libraries:
+  Arduino CAN shield (mcp_can) with MCP2515 chip:
+    - https://github.com/ttlappalainen/CAN_BUS_Shield
+    - https://github.com/ttlappalainen/NMEA2000_mcp
+    
+  Arduino DUE internal CAN:
+    - https://github.com/ttlappalainen/due_can
+    - https://github.com/ttlappalainen/NMEA2000_due
+    
+  Teensy 3.2-3.6 internal CAN:
+    - https://github.com/ttlappalainen/FlexCAN_Library
+    - https://github.com/ttlappalainen/NMEA2000_teensy
+    
+  Teensy 4.X internal CAN:
+    - https://github.com/ttlappalainen/NMEA2000_Teensyx
+    
+  ESP32 internal CAN:
+    - https://github.com/ttlappalainen/NMEA2000_esp32
+  
+  AVR:
+    - https://github.com/thomasonw/avr_can
+    - https://github.com/thomasonw/NMEA2000_avr
+  
+  MBED (note that there may be problem with fastpackets on MBED):
+    - https://github.com/thomasonw/NMEA2000_mbed
+    
+  RPi socket CAN:
+    -  https://github.com/thomasonw/NMEA2000_socketCAN
+  
 
   There are also library specific defines:
   mcp_can:
@@ -42,6 +73,17 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     #define ESP32_CAN_TX_PIN GPIO_NUM_16
     #define ESP32_CAN_RX_PIN GPIO_NUM_4
     
+  Teensy:
+    #define NMEA2000_TEENSY_CAN_BUS 1 // Select second CAN bus for Teensy 3.5 or 3.6
+    
+  Teensyx:
+    #define NMEA2000_TEENSYX_CAN_BUS tNMEA2000_Teensyx::CAN2 // select CAN bus 2
+    #define NMEA2000_TEENSYX_TX_PIN tNMEA2000_Teensyx::pinAlternate // Use selected CAN alternate Tx pin
+    #define NMEA2000_TEENSYX_RX_PIN tNMEA2000_Teensyx::pinAlternate // Use selected CAN alternate Rx pin
+    #define USE_NMEA2000_TEENSYX_FOR_TEENSY_3X // Force NMEA2000_TEENSYX also for Teensy 3.x boards
+    
+  Arduino DUE:
+    #define NMEA2000_ARDUINO_DUE_CAN_BUS tNMEA2000_due::CANDevice1  // Use CAN bus 1 instead of 0 for Arduino DUE
 */
 
 
@@ -58,6 +100,7 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define USE_N2K_SOCKET_CAN 5
 #define USE_N2K_MBED_CAN 6
 #define USE_N2K_ESP32_CAN 7
+#define USE_N2K_TEENSYX_CAN 8
 
 
 // Select right CAN according to prosessor
@@ -66,8 +109,14 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define USE_N2K_CAN USE_N2K_MBED_CAN
 #elif defined(__SAM3X8E__)
 #define USE_N2K_CAN USE_N2K_DUE_CAN
-#elif defined(__MK20DX256__)||defined(__ATMEGA32U4__) || defined(__MK64FX512__) || defined (__MK66FX1M0__)
+#elif defined(__ATMEGA32U4__)
 #define USE_N2K_CAN USE_N2K_TEENSY_CAN
+#elif defined(__MK20DX256__) || defined(__MK64FX512__) || defined (__MK66FX1M0__)
+#ifndef USE_NMEA2000_TEENSYX_FOR_TEENSY_3X
+  #define USE_N2K_CAN USE_N2K_TEENSY_CAN
+#else
+  #define USE_N2K_CAN USE_N2K_TEENSYX_CAN
+#endif
 #elif defined(__AVR_AT90CAN32__)||defined(__AVR_AT90CAN64__)||defined(__AVR_AT90CAN128__)|| \
       defined(__AVR_ATmega32C1__)||defined(__AVR_ATmega64C1__)||defined(__AVR_ATmega16M1__)||defined(__AVR_ATmega32M1__)|| defined(__AVR_ATmega64M1__)
 #define USE_N2K_CAN USE_N2K_AVR_CAN
@@ -75,6 +124,8 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define USE_N2K_CAN USE_N2K_SOCKET_CAN
 #elif defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
 #define USE_N2K_CAN USE_N2K_ESP32_CAN
+#elif defined(__IMXRT1062__)
+#define USE_N2K_CAN USE_N2K_TEENSYX_CAN
 #else
 #define USE_N2K_CAN USE_N2K_MCP_CAN
 #endif
@@ -82,18 +133,30 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #if USE_N2K_CAN == USE_N2K_DUE_CAN
 // Use Arduino Due internal CAN with due_can library
-#include <due_can.h>         // https://github.com/collin80/due_can
 #include <NMEA2000_due.h>
-tNMEA2000 &NMEA2000=*(new tNMEA2000_due());
+#ifndef NMEA2000_ARDUINO_DUE_CAN_BUS
+  #define NMEA2000_ARDUINO_DUE_CAN_BUS
+#endif
+tNMEA2000 &NMEA2000=*(new tNMEA2000_due(NMEA2000_ARDUINO_DUE_CAN_BUS));
 
 #elif USE_N2K_CAN == USE_N2K_TEENSY_CAN
-// Use Teensy 3.1&3.2 board internal CAN FlexCAN library
-#include <FlexCAN.h>
-#include <NMEA2000_teensy.h>    // https://github.com/sarfata/NMEA2000_teensy
+// Use Teensy 3.1/3.2/3.5/3.6 boards internal CAN FlexCAN library
+#include <NMEA2000_teensy.h>    // https://github.com/ttlappalainen/NMEA2000_teensy
 #ifndef NMEA2000_TEENSY_VER
-#error Update NMEA2000_Teensy for the latest version!
+#error Update NMEA2000_Teensy for the latest version! 
 #endif
-tNMEA2000 &NMEA2000=*(new tNMEA2000_teensy());
+#ifndef NMEA2000_TEENSY_DEF_TIMEOUT
+#define NMEA2000_TEENSY_DEF_TIMEOUT 4
+#endif
+#ifndef NMEA2000_TEENSY_CAN_BUS
+#define NMEA2000_TEENSY_CAN_BUS 0
+#endif
+tNMEA2000 &NMEA2000=*(new tNMEA2000_teensy(NMEA2000_TEENSY_DEF_TIMEOUT,NMEA2000_TEENSY_CAN_BUS));
+
+#elif USE_N2K_CAN == USE_N2K_TEENSYX_CAN
+// Use Teensy 3.1/3.2/3.5/3.6/4.0/4.1 boards internal CAN
+#include <NMEA2000_Teensyx.h>    // https://github.com/ttlappalainen/NMEA2000_Teensyx
+tNMEA2000 &NMEA2000=*(new tNMEA2000_Teensyx(NMEA2000_TEENSYX_CAN_BUS,NMEA2000_TEENSYX_TX_PIN,NMEA2000_TEENSYX_RX_PIN));
 
 #elif USE_N2K_CAN == USE_N2K_AVR_CAN
 // Use Atmel AVR internal CAN controller with avr_can library
@@ -108,7 +171,6 @@ tNMEA2000 &NMEA2000=*(new tNMEA2000_avr());
   #endif
 #include <NMEA2000_SocketCAN.h>       // https://github.com/thomasonw/NMEA2000_socketCAN
 tNMEA2000 &NMEA2000=*(new tNMEA2000_SocketCAN(SOCKET_CAN_PORT));
-tSocketStream serStream;
 
 #elif USE_N2K_CAN == USE_N2K_MBED_CAN
 // Use MBED devices

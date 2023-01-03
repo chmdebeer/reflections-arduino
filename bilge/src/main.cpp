@@ -18,12 +18,13 @@
 #include <stdio.h>
 
 #include "utils.h"
-#include "attitude.h"
+#include "JY901.h"
 
 BoatData boatData;
 
 tNMEA2000Handler NMEA2000Handlers[]={
   {127501L, &handleBinaryStatus},
+  {128006L, &handleThruster},
   {0,0}
 };
 
@@ -45,19 +46,21 @@ void setup() {
   unsigned char instance;
 
   Serial.begin(115200);
+  Serial.println("Starting  ");
+
+  Serial1.begin(9600);
 
   clearBoatData(boatData);
   for (instance=1; instance < (unsigned char)E_SWITCH_BANK_INSTANCES; instance++) {
     setIO(boatData, (SwitchBankInstance)instance);
   }
-
+  setThruster(boatData);
+  
   setupIO();
   setupTimers();
   setupNMEA();
 
   readRestartCount();
-
-  setupAttitude();
 }
 
 void loop() {
@@ -71,9 +74,20 @@ void loop() {
 
   TimerManager::instance().update();
 
-  loopAttitude(boatData);
-
   if ( Serial.available() ) { Serial.read(); }
+  while (Serial1.available()) 
+  {
+    if (JY901.CopeSerialData(Serial1.read())) {
+      boatData.attitude.roll = (double)JY901.stcAngle.Angle[0]/32768*180;
+      if (boatData.attitude.roll < 0) {
+        boatData.attitude.roll = -1.0 * (180.0 + boatData.attitude.roll);
+      } else {
+        boatData.attitude.roll = 180.0 - boatData.attitude.roll;
+      }
+      boatData.attitude.pitch = (double)JY901.stcAngle.Angle[1]/32768*180;
+      boatData.attitude.yaw = (double)JY901.stcAngle.Angle[2]/32768*180;
+    } //Call JY901 data cope function
+  }
 }
 
 void setupNMEA() {
@@ -90,7 +104,7 @@ void setupNMEA() {
 
   NMEA2000.SetMsgHandler(handleNMEA2000Msg);
 
-  NMEA2000.SetHeartbeatInterval(59300);
+  NMEA2000.SetHeartbeatIntervalAndOffset(55000, 410);
 
   NMEA2000.Open();
 }
@@ -131,6 +145,44 @@ void handleAddressClaim(const tN2kMsg &N2kMsg) {
   timers[T_NEW_DEVICE].start();
 }
 
+void handleThruster(const tN2kMsg &N2kMsg) {
+  unsigned char SID;
+  unsigned char Identifier; 
+  tN2kThrusterControlDirection Direction;
+  tN2kThrusterControlPower Power;
+  tN2kThrusterControlRetract Retract;
+  double Speed;
+  tN2kThrusterControlEvent Event;
+  unsigned char Timeout;
+  double Azimuth; 
+
+  Serial.println("Thruster");
+  if (ParseN2kPGN128006(N2kMsg, SID, Identifier, 
+    Direction, Power, Retract, Speed, Event, Timeout, Azimuth) ) {
+
+    if (Power == N2kThrusterControlPower_On) {
+      boatData.engines.bowThruster.power = N2kOnOff_On;
+
+      if (Direction == N2kThrusterControlDirection_ToPort) {
+        boatData.engines.bowThruster.toPort = N2kOnOff_On;
+        boatData.engines.bowThruster.toStarboard = N2kOnOff_Off;
+      } else if (Direction == N2kThrusterControlDirection_ToStarboard) {
+        boatData.engines.bowThruster.toPort = N2kOnOff_Off;
+        boatData.engines.bowThruster.toStarboard = N2kOnOff_On;
+      } else {
+        boatData.engines.bowThruster.toPort = N2kOnOff_Off;
+        boatData.engines.bowThruster.toStarboard = N2kOnOff_Off;
+      }
+
+    } else {
+      boatData.engines.bowThruster.power = N2kOnOff_Off;
+      boatData.engines.bowThruster.toPort = N2kOnOff_Off;
+      boatData.engines.bowThruster.toStarboard = N2kOnOff_Off;
+    }     
+    setThruster(boatData);
+  }
+}
+
 void newDevice() {
   n2kBinaryStatus(E_BILGE_PUMPS);
 }
@@ -168,13 +220,8 @@ void sendN2kSensorData() {
 void sendN2kAttitude() {
   tN2kMsg N2kMsg;
 
+  // Serial.print("Angle: R: ");Serial.print(boatData.attitude.roll);Serial.print("  P: ");Serial.print(boatData.attitude.pitch);Serial.print("  Y: ");Serial.println(boatData.attitude.yaw);
+
   SetN2kAttitude(N2kMsg, 1, DegToRad(boatData.attitude.yaw), DegToRad(boatData.attitude.pitch), DegToRad(boatData.attitude.roll));
   NMEA2000.SendMsg(N2kMsg);
-  // Serial.print("R=");
-  // Serial.print(boatData.attitude.roll, 4);
-  // Serial.print("\tP=");
-  // Serial.print(boatData.attitude.pitch, 4);
-  // Serial.print("\tY=");
-  // Serial.print(boatData.attitude.yaw, 4);
-  // Serial.println(" <-");
 }

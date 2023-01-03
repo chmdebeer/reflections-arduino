@@ -29,6 +29,40 @@ void setupIO() {
   pinMode(O_MIDSHIP_BILGE, OUTPUT);
   pinMode(O_BLACKWATER_AIR_PUMP, OUTPUT);
 
+  pinMode(O_REALY_2_1, OUTPUT);
+  pinMode(O_REALY_2_2, OUTPUT);
+  pinMode(O_REALY_2_3, OUTPUT);
+  pinMode(O_REALY_2_4, OUTPUT);
+  pinMode(O_REALY_2_5, OUTPUT);
+
+  pinMode(O_BOW_THRUSTER_POWER, OUTPUT);
+  pinMode(O_BOW_THRUSTER_PORT, OUTPUT);
+  pinMode(O_BOW_THRUSTER_STARBOARD, OUTPUT);
+
+  digitalWrite(O_MIDSHIP_BILDGE_LIGHTS, LOW);
+  digitalWrite(O_SHOWER_PUMP, LOW);
+  digitalWrite(O_MACERATOR, LOW);
+  digitalWrite(O_REFRIGERATOR, LOW);
+
+  digitalWrite(O_SPOT_LIGHT_SPOT, HIGH);
+  digitalWrite(O_SPOT_LIGHT_FOG, HIGH);
+  digitalWrite(O_SPOT_LIGHT_UP, HIGH);
+  digitalWrite(O_SPOT_LIGHT_DOWN, HIGH);
+  digitalWrite(O_SPOT_LIGHT_LEFT, HIGH);
+  digitalWrite(O_SPOT_LIGHT_RIGHT, HIGH);
+  digitalWrite(O_MIDSHIP_BILGE, HIGH);
+  digitalWrite(O_BLACKWATER_AIR_PUMP, HIGH);
+
+  digitalWrite(O_REALY_2_1, HIGH);
+  digitalWrite(O_REALY_2_2, HIGH);
+  digitalWrite(O_REALY_2_3, HIGH);
+  digitalWrite(O_REALY_2_4, HIGH);
+  digitalWrite(O_REALY_2_5, HIGH);
+
+  digitalWrite(O_BOW_THRUSTER_POWER, HIGH);
+  digitalWrite(O_BOW_THRUSTER_PORT, HIGH);
+  digitalWrite(O_BOW_THRUSTER_STARBOARD, HIGH);
+
   pinMode(I_MIDSHIP_BILGE, INPUT);
 
   sensors.begin();
@@ -40,7 +74,7 @@ bool readIO(BoatData &boatData, SwitchBankInstance instance) {
 
   if (instance == E_BILGE_PUMPS) {
     value = analogRead(I_MIDSHIP_BILGE);
-    if ((value > 600) && (boatData.bilgePumps.midship.floatSwitch != N2kOnOff_On)) {
+    if ((value > 250) && (boatData.bilgePumps.midship.floatSwitch != N2kOnOff_On)) {
       newIO = true;
       boatData.bilgePumps.midship.floatSwitch = N2kOnOff_On;
     }
@@ -118,6 +152,26 @@ void setIO(BoatData &boatData, SwitchBankInstance instance) {
 
   }
 
+}
+
+void setThruster(BoatData &boatData) {
+  if (boatData.engines.bowThruster.power == N2kOnOff_On) {
+    digitalWrite(O_BOW_THRUSTER_POWER, LOW);
+    if (boatData.engines.bowThruster.toPort == N2kOnOff_On) {
+      digitalWrite(O_BOW_THRUSTER_PORT, LOW);
+      digitalWrite(O_BOW_THRUSTER_STARBOARD, HIGH);
+    } else if (boatData.engines.bowThruster.toStarboard == N2kOnOff_On) {
+      digitalWrite(O_BOW_THRUSTER_PORT, HIGH);
+      digitalWrite(O_BOW_THRUSTER_STARBOARD, LOW);
+    } else {
+      digitalWrite(O_BOW_THRUSTER_PORT, HIGH);
+      digitalWrite(O_BOW_THRUSTER_STARBOARD, HIGH);
+    }
+  } else {
+    digitalWrite(O_BOW_THRUSTER_POWER, HIGH);
+    digitalWrite(O_BOW_THRUSTER_PORT, HIGH);
+    digitalWrite(O_BOW_THRUSTER_STARBOARD, HIGH);
+  }
 }
 
 void readSensors(BoatData &boatData) {

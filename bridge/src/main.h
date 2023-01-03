@@ -22,5 +22,5 @@ void blinkBridgeStartLed();
 void handleFluidLevel(const tN2kMsg &N2kMsg);
 void sendN2kACStatus();
 void sendN2kGNSS();
-
+void sendN2kThruster();
 

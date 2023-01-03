@@ -1,7 +1,7 @@
 /*
 N2kDef.h
 
-Copyright (c) 2015-2018 Timo Lappalainen, Kave Oy, www.kave.fi
+Copyright (c) 2015-2022 Timo Lappalainen, Kave Oy, www.kave.fi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -31,9 +31,6 @@ Type definitions and utility macros used in the NMEA2000 libraries.
 
 #if !defined(ARDUINO)
 extern "C" {
-// Application execution delay. Must be implemented by application.
-extern void delay(uint32_t ms);
-
 // Current uptime in milliseconds. Must be implemented by application.
 extern uint32_t millis();
 }

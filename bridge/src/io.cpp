@@ -8,12 +8,19 @@
 
 #define BOUNCE_INTERVAL 25
 enum debounce {
+  E_BOW_THRUSTER_ON,
+  E_BOW_THRUSTER_PORT,
+  E_BOW_THRUSTER_STARBOARD,
   E_PORT_START,
   E_STARBOARD_START,
+  E_DRIVE_BOW_UP,
+  E_DRIVE_BOW_DOWN,
   E_PORT_DRIVE_BOW_UP,
   E_PORT_DRIVE_BOW_DOWN,
   E_STARBOARD_DRIVE_BOW_UP,
   E_STARBOARD_DRIVE_BOW_DOWN,
+  E_TRIM_BOW_UP,
+  E_TRIM_BOW_DOWN,
   E_PORT_TRIM_BOW_UP,
   E_PORT_TRIM_BOW_DOWN,
   E_STARBOARD_TRIM_BOW_UP,
@@ -46,13 +53,24 @@ enum servo {
 };
 
 void setupIO() {
+
+  buttons[I_BOW_THRUSTER_ON].attach(I_PORT_START, INPUT_PULLUP);
+  buttons[I_BOW_THRUSTER_PORT].attach(I_PORT_START, INPUT_PULLUP);
+  buttons[I_BOW_THRUSTER_STARBOARD].attach(I_PORT_START, INPUT_PULLUP);
+
   buttons[E_PORT_START].attach(I_PORT_START, INPUT_PULLUP);
   buttons[E_STARBOARD_START].attach(I_STARBOARD_START, INPUT_PULLUP);
+
+  buttons[E_DRIVE_BOW_UP].attach(I_DRIVE_BOW_UP, INPUT_PULLUP);
+  buttons[E_DRIVE_BOW_DOWN].attach(I_DRIVE_BOW_DOWN, INPUT_PULLUP);
 
   buttons[E_PORT_DRIVE_BOW_UP].attach(I_PORT_DRIVE_BOW_UP, INPUT_PULLUP);
   buttons[E_PORT_DRIVE_BOW_DOWN].attach(I_PORT_DRIVE_BOW_DOWN, INPUT_PULLUP);
   buttons[E_STARBOARD_DRIVE_BOW_UP].attach(I_STARBOARD_DRIVE_BOW_UP, INPUT_PULLUP);
   buttons[E_STARBOARD_DRIVE_BOW_DOWN].attach(I_STARBOARD_DRIVE_BOW_DOWN, INPUT_PULLUP);
+
+  buttons[E_TRIM_BOW_UP].attach(I_TRIM_BOW_UP, INPUT_PULLUP);
+  buttons[E_TRIM_BOW_DOWN].attach(I_TRIM_BOW_DOWN, INPUT_PULLUP);
 
   buttons[E_PORT_TRIM_BOW_UP].attach(I_PORT_TRIM_BOW_UP, INPUT_PULLUP);
   buttons[E_PORT_TRIM_BOW_DOWN].attach(I_PORT_TRIM_BOW_DOWN, INPUT_PULLUP);
@@ -80,6 +98,8 @@ void setupIO() {
     buttons[e].interval(BOUNCE_INTERVAL);
   }
 
+  pinMode(O_BOW_THRUSTER_ON, OUTPUT);
+
   pinMode(O_BILGE_PUMP, OUTPUT);
   pinMode(O_ENGINE_ROOM_LIGHTS, OUTPUT);
   pinMode(O_ACCESSORIES_RADIO, OUTPUT);
@@ -90,9 +110,9 @@ void setupIO() {
   pinMode(O_PORT_START, OUTPUT);
   pinMode(O_STARBOARD_START, OUTPUT);
 
-  pinMode(O_SERVOS, OUTPUT);
-  pinMode(O_PORT_ENGINE_HOURS , OUTPUT);
-  pinMode(O_STARBOARD_ENGINE_HOURS , OUTPUT);
+  pinMode(O_RELAY_1, OUTPUT);
+  pinMode(O_RELAY_2 , OUTPUT);
+  pinMode(O_RELAY_3 , OUTPUT);
   pinMode(O_RELAY_4, OUTPUT);
   pinMode(O_RELAY_5, OUTPUT);
   pinMode(O_RELAY_6, OUTPUT);
@@ -107,6 +127,7 @@ void setupIO() {
 
 bool readIO(BoatData &boatData, SwitchBankInstance instance) {
   bool newIO = false;
+  tN2kOnOff value;
 
   if (instance == E_IGNITION_START) {
     newIO |= readStartButton(buttons[E_PORT_START], boatData.engines.port);
@@ -132,6 +153,18 @@ bool readIO(BoatData &boatData, SwitchBankInstance instance) {
     newIO |= readMomentaryButton(buttons[E_STARBOARD_DRIVE_BOW_UP], boatData.engines.starboard.trim.bowUp, true);
     newIO |= readMomentaryButton(buttons[E_STARBOARD_DRIVE_BOW_DOWN], boatData.engines.starboard.trim.bowDown, true);
 
+    newIO |= readMomentaryButton(buttons[E_DRIVE_BOW_UP], value, true);
+    if (value == N2kOnOff_On) {
+      boatData.engines.port.trim.bowUp = N2kOnOff_On;
+      boatData.engines.starboard.trim.bowUp = N2kOnOff_On;
+    }
+
+    newIO |= readMomentaryButton(buttons[E_DRIVE_BOW_DOWN], value, true);
+    if (value == N2kOnOff_On) {
+      boatData.engines.port.trim.bowDown = N2kOnOff_On;
+      boatData.engines.starboard.trim.bowDown = N2kOnOff_On;
+    }
+
   } else if (instance == E_TRIM) {
     // boatData.trim.port.bowUp // 4.1
     // boatData.trim.port.bowDown // 4.2
@@ -141,6 +174,18 @@ bool readIO(BoatData &boatData, SwitchBankInstance instance) {
     newIO |= readMomentaryButton(buttons[E_PORT_TRIM_BOW_DOWN], boatData.trim.port.bowDown, true);
     newIO |= readMomentaryButton(buttons[E_STARBOARD_TRIM_BOW_UP], boatData.trim.starboard.bowUp, true);
     newIO |= readMomentaryButton(buttons[E_STARBOARD_TRIM_BOW_DOWN], boatData.trim.starboard.bowDown, true);
+
+    newIO |= readMomentaryButton(buttons[E_TRIM_BOW_UP], value, true);
+    if (value == N2kOnOff_On) {
+      boatData.trim.port.bowUp = N2kOnOff_On;
+      boatData.trim.starboard.bowUp = N2kOnOff_On;
+    }
+
+    newIO |= readMomentaryButton(buttons[E_TRIM_BOW_DOWN], value, true);
+    if (value == N2kOnOff_On) {
+      boatData.trim.port.bowDown = N2kOnOff_On;
+      boatData.trim.starboard.bowDown = N2kOnOff_On;
+    }
 
   } else if (instance == E_NUTRASALT) {
     // boatData.engines.port.nutraSalt // 5.1
@@ -270,7 +315,10 @@ bool readIO(BoatData &boatData, SwitchBankInstance instance) {
         boatData.bilgePumps.midship.on = N2kOnOff_Off;
       }
     }
-
+  } else if (instance == E_BOW_THRUSTER) {
+    newIO |= readToggleButton(buttons[E_BOW_THRUSTER_ON], boatData.engines.bowThruster.power);
+    newIO |= readMomentaryButton(buttons[E_BOW_THRUSTER_PORT], boatData.engines.bowThruster.toPort, true);
+    newIO |= readMomentaryButton(buttons[E_BOW_THRUSTER_STARBOARD], boatData.engines.bowThruster.toStarboard, true);
   }
 
   return newIO;
@@ -364,9 +412,9 @@ void setIO(BoatData &boatData, SwitchBankInstance instance) {
   }
   // digitalWrite(O_ROCM_RADIO, (boatData.utilities.radio == N2kOnOff_On));
 
-  digitalWrite(O_SERVOS, HIGH);
-  digitalWrite(O_PORT_ENGINE_HOURS, HIGH);
-  digitalWrite(O_STARBOARD_ENGINE_HOURS, HIGH);
+  digitalWrite(O_RELAY_1, HIGH);
+  digitalWrite(O_RELAY_2, HIGH);
+  digitalWrite(O_RELAY_3, HIGH);
   digitalWrite(O_RELAY_4, HIGH);
   digitalWrite(O_RELAY_5, HIGH);
   digitalWrite(O_RELAY_6, HIGH);

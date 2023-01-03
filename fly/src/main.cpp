@@ -93,7 +93,7 @@ void setupNMEA() {
 
   NMEA2000.SetMsgHandler(handleNMEA2000Msg);
 
-  NMEA2000.SetHeartbeatInterval(59300);
+  NMEA2000.SetHeartbeatIntervalAndOffset(55000, 310);
 
   NMEA2000.Open();
 }

@@ -72,7 +72,11 @@ void loop() {
   for (int instance=1; instance < (unsigned char)E_SWITCH_BANK_INSTANCES; instance++) {
     if (readIO(boatData, (SwitchBankInstance)instance)) {
       setIO(boatData, (SwitchBankInstance)instance);
-      n2kBinaryStatus((SwitchBankInstance)instance);
+      if (instance == (unsigned char)E_BOW_THRUSTER) {
+        sendN2kThruster();
+      } else {
+        n2kBinaryStatus((SwitchBankInstance)instance);
+      }
     }
   }
 
@@ -95,7 +99,7 @@ void setupNMEA() {
 
   NMEA2000.SetMsgHandler(handleNMEA2000Msg);
 
-  NMEA2000.SetHeartbeatInterval(59300);
+  NMEA2000.SetHeartbeatIntervalAndOffset(55000, 210);
 
   NMEA2000.Open();
 }
@@ -173,6 +177,36 @@ void sendN2kSystemStatus() {
   SetN2kReflectionsResetCount(N2kMsg, 21, boatData.system.bridgeRestartCount);
   NMEA2000.SendMsg(N2kMsg);
 }
+
+void sendN2kThruster() {
+  tN2kMsg N2kMsg;
+  tN2kThrusterControlDirection direction;
+  tN2kThrusterControlPower power;
+
+  digitalWrite(O_BOW_THRUSTER_ON, (boatData.engines.bowThruster.power == N2kOnOff_On));
+  if (boatData.engines.bowThruster.power == N2kOnOff_On) {
+    power = N2kThrusterControlPower_On;
+
+    if (boatData.engines.bowThruster.toPort == N2kOnOff_On) {
+      direction = N2kThrusterControlDirection_ToPort;
+    } else if (boatData.engines.bowThruster.toStarboard == N2kOnOff_On) {
+      direction = N2kThrusterControlDirection_ToStarboard;
+    } else {
+      direction = N2kThrusterControlDirection_Off;
+    }
+  } else {
+    power = N2kThrusterControlPower_Off;
+    direction = N2kThrusterControlDirection_Off;
+  }
+
+  SetN2kPGN128006(N2kMsg, 11, 11, 
+    direction, power,
+    N2kThrusterControlRetract_Off, 1.0, N2kThrusterControlEventOtherDevice, 200, 0
+  );
+  NMEA2000.SendMsg(N2kMsg);
+
+}
+
 
 void handleEngineRPM(const tN2kMsg &N2kMsg) {
   unsigned char instance;

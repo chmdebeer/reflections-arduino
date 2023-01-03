@@ -4,11 +4,11 @@
 #define N2k_CAN_INT_PIN 2
 #define N2k_SPI_CS_PIN 48
 
-#define O_FUEL 3
-#define O_PORT_BATTERY 4
-#define O_PORT_ENGINE_RPM 5
-#define O_PORT_ENGINE_OIL 6
-#define O_PORT_ENGINE_TEMP 7
+#define NA_3 3
+#define NA_4 4
+#define NA_5 5
+#define NA_6 6
+#define NA_7 7
 
 #define O_BILGE_BLOWER 8
 #define O_BILGE_PUMP 9
@@ -20,22 +20,21 @@
 #define NA_14 14
 #define NA_15 15
 
-#define O_STARBOARD_BATTERY 16
-#define O_STARBOARD_ENGINE_RPM 17
-#define O_STARBOARD_ENGINE_OIL 18
-#define O_STARBOARD_ENGINE_TEMP 19
+#define O_BOW_THRUSTER_ON 16
+#define I_BOW_THRUSTER_ON 17
+#define I_BOW_THRUSTER_PORT 18
+#define I_BOW_THRUSTER_STARBOARD 19
 
 #define I_DRIVE_BOW_DOWN 20
 #define I_DRIVE_BOW_UP 21
-
 #define I_PORT_DRIVE_BOW_DOWN 22
 #define I_PORT_DRIVE_BOW_UP 23
 #define I_STARBOARD_DRIVE_BOW_DOWN 24
 #define I_STARBOARD_DRIVE_BOW_UP 25
 
-#define O_SERVOS 26
-#define O_PORT_ENGINE_HOURS 27
-#define O_STARBOARD_ENGINE_HOURS 28
+#define O_RELAY_1 26
+#define O_RELAY_2 27
+#define O_RELAY_3 28
 #define O_RELAY_4 29
 #define O_RELAY_5 30
 #define O_RELAY_6 31
@@ -52,9 +51,10 @@
 #define I_STARBOARD_START 40
 #define O_STARBOARD_START 41
 
-// #define O_COMPASS_LIGHT 44
+#define NA_42
+#define NA_44
 
-#define O_INSTRUMENT_LIGHTS 43
+#define O_INSTRUMENT_LIGHTS 43 // ?
 #define O_BATHROOM_LIGHTS 45
 #define O_BERTH_LIGHTS 46
 #define O_MOSFET_4 47

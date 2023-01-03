@@ -1,7 +1,7 @@
 /*
 ActisenseReader.cpp
 
-Copyright (c) 2015-2018 Timo Lappalainen, Kave Oy, www.kave.fi
+Copyright (c) 2015-2022 Timo Lappalainen, Kave Oy, www.kave.fi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -25,6 +25,7 @@ This is class for reading Actisense format messages from given stream.
 */
 #include "ActisenseReader.h"
 #include <string.h>
+#include "N2kTimer.h"
 
 //*****************************************************************************
 tActisenseReader::tActisenseReader() {
@@ -81,7 +82,7 @@ bool tActisenseReader::CheckMessage(tN2kMsg &N2kMsg) {
      N2kMsg.MsgTime=GetBuf4ByteUInt(i,MsgBuf);
    } else {
      N2kMsg.Source=DefaultSource;
-     N2kMsg.MsgTime=millis();
+     N2kMsg.MsgTime=N2kMillis();
    }
    N2kMsg.DataLen=MsgBuf[i++];
 
@@ -96,21 +97,28 @@ bool tActisenseReader::CheckMessage(tN2kMsg &N2kMsg) {
 }
 
 //*****************************************************************************
+bool tActisenseReader::IsStart(char ch) {
+  return (ch==Escape);
+}
+
+//*****************************************************************************
 // Read Actisense formatted NMEA2000 message from stream
 // Actisense Format:
 // <10><02><93><length (1)><priority (1)><PGN (3)><destination (1)><source (1)><time (4)><len (1)><data (len)><CRC (1)><10><03>
 // or
 // <10><02><94><length (1)><priority (1)><PGN (3)><destination (1)><len (1)><data (len)><CRC (1)><10><03>
-bool tActisenseReader::GetMessageFromStream(tN2kMsg &N2kMsg) {
+bool tActisenseReader::GetMessageFromStream(tN2kMsg &N2kMsg, bool ReadOut) {
   bool result=false;
 
-  if (ReadStream==0)
-    return false;
+  if (ReadStream==0) return false;
 
   int NewByte;
-  while ((NewByte = ReadStream->read()) != -1 && !result) {
+  bool ContinueLoopAvailable=true;
+
+  while ((NewByte = ReadStream->peek()) != -1 && !result && ContinueLoopAvailable) {
 //        Serial.println((char)NewByte,HEX);
       if (MsgIsComing) {
+        ReadStream->read();
         if (EscapeReceived) {
           switch (NewByte) {
             case Escape: // Escaped Escape
@@ -147,19 +155,25 @@ bool tActisenseReader::GetMessageFromStream(tN2kMsg &N2kMsg) {
           case StartOfText:
             StartOfTextReceived=false;
             if (EscapeReceived) {
+              ReadStream->read(); // Read ch out
               ClearBuffer();
               StartOfTextReceived=true;
             }
             break;
           default:
+            EscapeReceived=(NewByte==Escape);
             if (StartOfTextReceived) {
+              ReadStream->read(); // Read ch out
               StartOfTextReceived=false;
               MsgIsComing=true;
               AddByteToBuffer(NewByte);
+            } else {
+              if ( EscapeReceived || ReadOut ) ReadStream->read(); // Read ch out
             }
         }
-        EscapeReceived=(NewByte==Escape);
       }
+
+    ContinueLoopAvailable=ReadOut || Handling();
   }
 
   return result;

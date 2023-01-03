@@ -1,7 +1,7 @@
 /*
 NMEA2000_mcp.cpp
 
-Copyright (c) 2015-2019 Timo Lappalainen, Kave Oy, www.kave.fi
+Copyright (c) 2015-2020 Timo Lappalainen, Kave Oy, www.kave.fi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -56,7 +56,11 @@ bool CanInUse=false;
 tNMEA2000_mcp *pNMEA2000_mcp1=0;
 
 void CanIdToN2k(unsigned long id, unsigned char &prio, unsigned long &pgn, unsigned char &src, unsigned char &dst);
+#if defined(ESP8266)
+ICACHE_RAM_ATTR void Can1Interrupt();
+#else
 void Can1Interrupt();
+#endif
 
 //*****************************************************************************
 void PrintDecodedCanIdAndLen(unsigned long id, unsigned char len) {
@@ -238,10 +242,10 @@ void tNMEA2000_mcp::InterruptHandler() {
         //N2kCAN.readMsgBuf(&len,buf);
         //id=N2kCAN.getCanId();
         //pRxBuffer->AddFrame(id,len,buf);
-      } else { // Buffer full, skip char
-        tCANFrame MissFrame;
+      } else { // Buffer full, skip frame
+        tCANFrame FrameToSkip;
         byte ext,rtr;
-        N2kCAN.readMsgBufID(status,&(MissFrame.id),&ext,&rtr,&(MissFrame.len),MissFrame.buf);
+        N2kCAN.readMsgBufID(status,&(FrameToSkip.id),&ext,&rtr,&(FrameToSkip.len),FrameToSkip.buf);
       }
     }
 
@@ -284,6 +288,10 @@ void tNMEA2000_mcp::TestISR() {    // if ( CanIntChk ) { Serial.print("CAN int c
 
 
 //*****************************************************************************
+#if defined(ESP8266)
+ICACHE_RAM_ATTR void Can1Interrupt() {
+#else
 void Can1Interrupt() {
+#endif
   pNMEA2000_mcp1->InterruptHandler();
 }

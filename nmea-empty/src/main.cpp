@@ -24,6 +24,7 @@ BoatData boatData;
 
 tNMEA2000Handler NMEA2000Handlers[]={
   {127501L, &handleBinaryStatus},
+  {128006L, &handleThruster},
   {59904L, &handleAddressClaim},
   {0,0}
 };
@@ -91,15 +92,16 @@ void setupNMEA() {
 
   NMEA2000.SetForwardStream(&Serial);
   NMEA2000.SetForwardType(tNMEA2000::fwdt_Text);
-  // NMEA2000.EnableForward(false);
+  NMEA2000.EnableForward(false);
 
   NMEA2000.SetMode(tNMEA2000::N2km_ListenAndNode, 11);
 
   NMEA2000.SetMsgHandler(handleNMEA2000Msg);
 
-  NMEA2000.SetHeartbeatInterval(59300);
+  NMEA2000.SetHeartbeatIntervalAndOffset(55000, 110);
 
   NMEA2000.Open();
+
 }
 
 void setupTimers() {
@@ -321,6 +323,45 @@ void handleBinaryStatus(const tN2kMsg &N2kMsg) {
   }
 }
 
+void handleThruster(const tN2kMsg &N2kMsg) {
+  unsigned char SID;
+  unsigned char Identifier; 
+  tN2kThrusterControlDirection Direction;
+  tN2kThrusterControlPower Power;
+  tN2kThrusterControlRetract Retract;
+  double Speed;
+  tN2kThrusterControlEvent Event;
+  unsigned char Timeout;
+  double Azimuth; 
+
+  Serial.println("Thruster");
+  if (ParseN2kPGN128006(N2kMsg, SID, Identifier, 
+    Direction, Power, Retract, Speed, Event, Timeout, Azimuth) ) {
+
+    if (Power == N2kThrusterControlPower_On) {
+      boatData.engines.bowThruster.power = N2kOnOff_On;
+
+      if (Direction == N2kThrusterControlDirection_ToPort) {
+        boatData.engines.bowThruster.toPort = N2kOnOff_On;
+        boatData.engines.bowThruster.toStarboard = N2kOnOff_Off;
+      } else if (Direction == N2kThrusterControlDirection_ToStarboard) {
+        boatData.engines.bowThruster.toPort = N2kOnOff_Off;
+        boatData.engines.bowThruster.toStarboard = N2kOnOff_On;
+      } else {
+        boatData.engines.bowThruster.toPort = N2kOnOff_Off;
+        boatData.engines.bowThruster.toStarboard = N2kOnOff_Off;
+      }
+
+    } else {
+      boatData.engines.bowThruster.power = N2kOnOff_Off;
+      boatData.engines.bowThruster.toPort = N2kOnOff_Off;
+      boatData.engines.bowThruster.toStarboard = N2kOnOff_Off;
+    }     
+
+  }
+}
+
+
 void handleAddressClaim(const tN2kMsg &N2kMsg) {
   Serial.println("Address Claim");
   timers[T_NEW_DEVICE].start();
@@ -441,7 +482,7 @@ void sendEngine() {
   tN2kMsg N2kMsgDynamicStarboard;
   tN2kMsg N2kMsgRapidPort;
   tN2kMsg N2kMsgRapidStarboard;
-
+/*
   boatData.engines.port.oilPressure += 1;
   if (boatData.engines.port.oilPressure > 800) {
     boatData.engines.port.oilPressure = 0;
@@ -507,7 +548,7 @@ void sendEngine() {
   // delay(N2K_DELAY_BETWEEN_SEND);
   SetN2kEngineParamRapid(N2kMsgRapidStarboard, 1, boatData.engines.starboard.rpm, 0.0, boatData.engines.starboard.trim.angle);
   NMEA2000.SendMsg(N2kMsgRapidStarboard);
-
+*/
 }
 
 
@@ -542,108 +583,126 @@ void sendN2kFuelConsumption() {
 
 void sendN2kSensorData() {
   sendN2kACStatus();
-  // static int sensorIndex = 0;
-  // tN2kMsg N2kMsg;
-  // tN2kMsg N2kMsg_port;
-  // tN2kMsg N2kMsg_starboard;
-  //
-  // switch (sensorIndex) {
-  //   case 0:
-  //     boatData.fuel.level = 25;
-  //     SetN2kFluidLevel(N2kMsg, 1, N2kft_Fuel, boatData.fuel.level, 1200.0);
-  //     NMEA2000.SendMsg(N2kMsg);
-  //     break;
-  //   case 1:
-  //     // boatData.engines.engineRoomTemperature = 32+273;
-  //     // SetN2kTemperature(N2kMsg, 1, 1, N2kts_EngineRoomTemperature, boatData.engines.engineRoomTemperature);
-  //     // NMEA2000.SendMsg(N2kMsg);
-  //     break;
-  //   case 2:
-  //     boatData.engines.port.oilPressure = 19000;
-  //     boatData.engines.port.waterTemperature = 85+273;
-  //     SetN2kEngineDynamicParam(N2kMsg, 0,
-  //       boatData.engines.port.oilPressure,
-  //       N2kDoubleNA, // EngineOilTemp
-  //       boatData.engines.port.waterTemperature,
-  //       N2kDoubleNA, // AltenatorVoltage,
-  //       N2kDoubleNA, // FuelRate,
-  //       N2kDoubleNA, // EngineHours
-  //       N2kDoubleNA, // EngineCoolantPress
-  //       N2kDoubleNA // EngineFuelPress
-  //     );
-  //     NMEA2000.SendMsg(N2kMsg);
-  //     break;
-  //   case 3:
-  //     boatData.engines.starboard.oilPressure = 20000;
-  //     boatData.engines.starboard.waterTemperature = 90+273;
-  //     SetN2kEngineDynamicParam(N2kMsg, 1,
-  //       boatData.engines.starboard.oilPressure,
-  //       N2kDoubleNA, // EngineOilTemp
-  //       boatData.engines.starboard.waterTemperature,
-  //       N2kDoubleNA, // AltenatorVoltage,
-  //       N2kDoubleNA, // FuelRate,
-  //       N2kDoubleNA, // EngineHours
-  //       N2kDoubleNA, // EngineCoolantPress
-  //       N2kDoubleNA // EngineFuelPress
-  //     );
-  //     NMEA2000.SendMsg(N2kMsg);
-  //     break;
-  //   case 4:
-  //     boatData.batteries.port = 12;
-  //     SetN2kDCBatStatus(N2kMsg, 0, boatData.batteries.port, 0, 0, 1);
-  //     NMEA2000.SendMsg(N2kMsg);
-  //     break;
-  //   case 5:
-  //     boatData.batteries.starboard = 13;
-  //     SetN2kDCBatStatus(N2kMsg, 1, boatData.batteries.starboard, 0, 0, 1);
-  //     NMEA2000.SendMsg(N2kMsg);
-  //     break;
-  //   case 6:
-  //     boatData.batteries.auxiliary = 14;
-  //     SetN2kDCBatStatus(N2kMsg, 2, boatData.batteries.auxiliary, 0, 0, 1);
-  //     NMEA2000.SendMsg(N2kMsg);
-  //     break;
-  //   case 7:
-  //     boatData.ac.volts = 112;
-  //     boatData.ac.amps = 15;
-  //     SetN2kACStatus(N2kMsg, 1, 1, N2kACL_Line1, N2kACA_Good, boatData.ac.volts, boatData.ac.amps, 60.0, 25.0, 0.0, 0.0, 0.0);
-  //     NMEA2000.SendMsg(N2kMsg);
-  //     break;
-  //   case 8:
-  //     boatData.environment.belowDeckTemperature = 21;
-  //     SetN2kTemperature(N2kMsg, 1, 1, N2kts_InsideTemperature, CToKelvin(boatData.environment.belowDeckTemperature));
-  //     NMEA2000.SendMsg(N2kMsg);
-  //     break;
-  //   case 9:
-  //     boatData.attitude.yaw = 10;
-  //     boatData.attitude.pitch = 15;
-  //     boatData.attitude.roll = 4;
-  //     SetN2kAttitude(N2kMsg, 1, DegToRad(boatData.attitude.yaw), DegToRad(boatData.attitude.pitch), DegToRad(boatData.attitude.roll));
-  //     NMEA2000.SendMsg(N2kMsg);
-  //     break;
-  //   case 10:
-  //     boatData.engines.port.rpm = 3010;
-  //     boatData.engines.starboard.rpm = 3020;
-  //     boatData.engines.port.trim.angle = 4.0/13.0;
-  //     boatData.engines.starboard.trim.angle = 12.0/13.0;
-  //     SetN2kEngineParamRapid(N2kMsg_port, 0, boatData.engines.port.rpm, 0.0, boatData.engines.port.trim.angle);
-  //     NMEA2000.SendMsg(N2kMsg_port);
-  //     // delay(N2K_DELAY_BETWEEN_SEND);
-  //     SetN2kEngineParamRapid(N2kMsg_starboard, 1, boatData.engines.starboard.rpm, 0.0, boatData.engines.starboard.trim.angle);
-  //     NMEA2000.SendMsg(N2kMsg_starboard);
-  //     break;
-  //   case 11:
-  //     // boatData.engines.engineRoomTemperature = 25+273;
-  //     // SetN2kTemperature(N2kMsg, 1, 1, N2kts_MainCabinTemperature, boatData.engines.engineRoomTemperature);
-  //     // NMEA2000.SendMsg(N2kMsg);
-  //     break;
-  //   default:
-  //     break;
-  // }
-  //
-  // if (++sensorIndex > 11) {
-  //   sensorIndex = 0;
-  // }
+  static int sensorIndex = 0;
+  tN2kMsg N2kMsg;
+  tN2kMsg N2kMsg_port;
+  tN2kMsg N2kMsg_starboard;
+  unsigned char test;
+  
+  switch (sensorIndex) {
+    case 0:
+      Serial.println("$$$$$$$$$$$$$$$$444");
+
+
+
+      SetN2kPGN128006(N2kMsg, 1, 3, 
+      N2kThrusterControlDirection_ToStarboard, 
+      N2kThrusterControlPower_On,
+      N2kThrusterControlRetract_Retract,
+      0.98,
+      N2kThrusterControlEventOtherDevice,
+      225,
+      0.34);
+      NMEA2000.SendMsg(N2kMsg);
+      // boatData.fuel.level = 25;
+      // SetN2kFluidLevel(N2kMsg, 1, N2kft_Fuel, boatData.fuel.level, 1200.0);
+      // NMEA2000.SendMsg(N2kMsg);
+      break;
+    case 1:
+      // boatData.engines.engineRoomTemperature = 32+273;
+      // SetN2kTemperature(N2kMsg, 1, 1, N2kts_EngineRoomTemperature, boatData.engines.engineRoomTemperature);
+      // NMEA2000.SendMsg(N2kMsg);
+      break;
+    case 2:
+      // boatData.engines.port.oilPressure = 19000;
+      // boatData.engines.port.waterTemperature = 85+273;
+      // SetN2kEngineDynamicParam(N2kMsg, 0,
+      //   boatData.engines.port.oilPressure,
+      //   N2kDoubleNA, // EngineOilTemp
+      //   boatData.engines.port.waterTemperature,
+      //   N2kDoubleNA, // AltenatorVoltage,
+      //   N2kDoubleNA, // FuelRate,
+      //   N2kDoubleNA, // EngineHours
+      //   N2kDoubleNA, // EngineCoolantPress
+      //   N2kDoubleNA // EngineFuelPress
+      // );
+      // NMEA2000.SendMsg(N2kMsg);
+      break;
+    case 3:
+      // boatData.engines.starboard.oilPressure = 20000;
+      // boatData.engines.starboard.waterTemperature = 90+273;
+      // SetN2kEngineDynamicParam(N2kMsg, 1,
+      //   boatData.engines.starboard.oilPressure,
+      //   N2kDoubleNA, // EngineOilTemp
+      //   boatData.engines.starboard.waterTemperature,
+      //   N2kDoubleNA, // AltenatorVoltage,
+      //   N2kDoubleNA, // FuelRate,
+      //   N2kDoubleNA, // EngineHours
+      //   N2kDoubleNA, // EngineCoolantPress
+      //   N2kDoubleNA // EngineFuelPress
+      // );
+      // NMEA2000.SendMsg(N2kMsg);
+      break;
+    case 4:
+      boatData.batteries.port = 12;
+      SetN2kDCBatStatus(N2kMsg, 0, boatData.batteries.port, 0, 0, 1);
+      NMEA2000.SendMsg(N2kMsg);
+      break;
+    case 5:
+      boatData.batteries.starboard = 13;
+      SetN2kDCBatStatus(N2kMsg, 1, boatData.batteries.starboard, 0, 0, 1);
+      NMEA2000.SendMsg(N2kMsg);
+      break;
+    case 6:
+      boatData.batteries.auxiliary = 14;
+      SetN2kDCBatStatus(N2kMsg, 2, boatData.batteries.auxiliary, 0, 0, 1);
+      NMEA2000.SendMsg(N2kMsg);
+      break;
+    case 7:
+      boatData.ac.volts = 112;
+      boatData.ac.amps = 15;
+      SetN2kACStatus(N2kMsg, 1, 1, N2kACL_Line1, N2kACA_Good, boatData.ac.volts, boatData.ac.amps, 60.0, 25.0, 0.0, 0.0, 0.0);
+      NMEA2000.SendMsg(N2kMsg);
+      break;
+    case 8:
+      boatData.environment.belowDeckTemperature = 21;
+      SetN2kTemperature(N2kMsg, 1, 1, N2kts_InsideTemperature, CToKelvin(boatData.environment.belowDeckTemperature));
+      NMEA2000.SendMsg(N2kMsg);
+      break;
+    case 9:
+      Serial.println("attitude");
+      boatData.attitude.roll += 1;
+      if (boatData.attitude.roll > 20) {
+        boatData.attitude.roll = -20;
+      }
+      // boatData.attitude.pitch = 15;
+      // boatData.attitude.roll = 4;
+      SetN2kAttitude(N2kMsg, 1, DegToRad(boatData.attitude.yaw), DegToRad(boatData.attitude.pitch), DegToRad(boatData.attitude.roll));
+      NMEA2000.SendMsg(N2kMsg);
+      break;
+    case 10:
+      boatData.engines.port.rpm = 3010;
+      boatData.engines.starboard.rpm = 3020;
+      boatData.engines.port.trim.angle = 4.0/13.0;
+      boatData.engines.starboard.trim.angle = 12.0/13.0;
+      SetN2kEngineParamRapid(N2kMsg_port, 0, boatData.engines.port.rpm, 0.0, boatData.engines.port.trim.angle);
+      NMEA2000.SendMsg(N2kMsg_port);
+      // delay(N2K_DELAY_BETWEEN_SEND);
+      SetN2kEngineParamRapid(N2kMsg_starboard, 1, boatData.engines.starboard.rpm, 0.0, boatData.engines.starboard.trim.angle);
+      NMEA2000.SendMsg(N2kMsg_starboard);
+      break;
+    case 11:
+      // boatData.engines.engineRoomTemperature = 25+273;
+      // SetN2kTemperature(N2kMsg, 1, 1, N2kts_MainCabinTemperature, boatData.engines.engineRoomTemperature);
+      // NMEA2000.SendMsg(N2kMsg);
+      break;
+    default:
+      break;
+  }
+  
+  if (++sensorIndex > 11) {
+    sensorIndex = 0;
+  }
 }
 
 void readRestartCount() {

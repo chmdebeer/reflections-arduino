@@ -109,7 +109,7 @@ void setupNMEA() {
 
   NMEA2000.SetMsgHandler(handleNMEA2000Msg);
 
-  NMEA2000.SetHeartbeatInterval(59300);
+  NMEA2000.SetHeartbeatIntervalAndOffset(55000, 110);
 
   NMEA2000.Open();
 }
@@ -313,7 +313,7 @@ void handleEngineDynamicParameters(const tN2kMsg &N2kMsg) {
   double EngineFuelPress;
   int8_t EngineLoad;
   int8_t EngineTorque;
-  unsigned int value;
+  // unsigned int value;
 
   if (ParseN2kEngineDynamicParam(N2kMsg, instance, EngineOilPress, EngineOilTemp, EngineCoolantTemp,
       AltenatorVoltage, FuelRate, EngineHours, EngineCoolantPress, EngineFuelPress, EngineLoad, EngineTorque) ) {
@@ -361,6 +361,7 @@ void sendN2kEngineRPM() {
   tN2kMsg N2kMsg_dynamicPort;
   tN2kMsg N2kMsg_rapidStarboard;
   tN2kMsg N2kMsg_dynamicStarboard;
+  tN2kEngineDiscreteStatus1 Status1;
 
   // static int rpm = 0;
   // Serial.print("RPM ");
@@ -386,7 +387,10 @@ void sendN2kEngineRPM() {
       N2kDoubleNA, // FuelRate,
       N2kDoubleNA, // EngineHours
       N2kDoubleNA, // EngineCoolantPress
-      N2kDoubleNA // EngineFuelPress
+      N2kDoubleNA, // EngineFuelPress
+      N2kInt8NA, // EngineLoad
+      N2kInt8NA, // EngineTorque
+      Status1 // Alarms
     );
     NMEA2000.SendMsg(N2kMsg_dynamicPort);
 
@@ -407,7 +411,10 @@ void sendN2kEngineRPM() {
       N2kDoubleNA, // FuelRate,
       N2kDoubleNA, // EngineHours
       N2kDoubleNA, // EngineCoolantPress
-      N2kDoubleNA // EngineFuelPress
+      N2kDoubleNA, // EngineFuelPress
+      N2kInt8NA,
+      N2kInt8NA,
+      Status1
     );
     NMEA2000.SendMsg(N2kMsg_dynamicStarboard);
 

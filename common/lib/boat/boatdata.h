@@ -21,6 +21,7 @@ enum SwitchBankInstance {
   E_UTILITIES_BILGE,
   E_UTILITIES_ENGINE_ROOM,
   E_BILGE_PUMPS,
+  E_BOW_THRUSTER,
   E_SWITCH_BANK_INSTANCES
 };
 
@@ -66,6 +67,13 @@ typedef struct {
 } Trim;
 
 typedef struct {
+  tN2kOnOff power;
+  tN2kOnOff toPort;
+  tN2kOnOff toStarboard;
+} BowThruster;
+
+
+typedef struct {
   tN2kOnOff ignition;
   tN2kOnOff start;
   bool ready;
@@ -83,6 +91,7 @@ typedef struct {
 typedef struct {
   Engine port;
   Engine starboard;
+  BowThruster bowThruster;
   double engineRoomTemperatureBottom;
   double engineRoomTemperatureTop;
 } Engines;
@@ -139,9 +148,9 @@ typedef struct {
 } Utilities;
 
 typedef struct {
-  float pitch;
-  float yaw;
-  float roll;
+  double pitch;
+  double yaw;
+  double roll;
 } Attitude;
 
 typedef struct {
