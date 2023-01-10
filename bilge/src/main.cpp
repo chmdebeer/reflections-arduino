@@ -80,11 +80,11 @@ void loop() {
     if (JY901.CopeSerialData(Serial1.read())) {
       boatData.attitude.roll = (double)JY901.stcAngle.Angle[0]/32768*180;
       if (boatData.attitude.roll < 0) {
-        boatData.attitude.roll = -1.0 * (180.0 + boatData.attitude.roll);
+        boatData.attitude.roll = 180.0 + boatData.attitude.roll;
       } else {
-        boatData.attitude.roll = 180.0 - boatData.attitude.roll;
+        boatData.attitude.roll = -1.0 * (180.0 - boatData.attitude.roll);
       }
-      boatData.attitude.pitch = (double)JY901.stcAngle.Angle[1]/32768*180;
+      boatData.attitude.pitch = -1.0 * ((double)JY901.stcAngle.Angle[1]/32768*180);
       boatData.attitude.yaw = (double)JY901.stcAngle.Angle[2]/32768*180;
     } //Call JY901 data cope function
   }
@@ -134,6 +134,8 @@ void handleNMEA2000Msg(const tN2kMsg &N2kMsg) {
 void handleBinaryStatus(const tN2kMsg &N2kMsg) {
   unsigned char instance;
   tN2kBinaryStatus binaryStatus;
+
+  Serial.println("switches");
 
   if (ParseN2kBinaryStatus(N2kMsg, instance, binaryStatus) ) {
     boatDataFromBinaryStatus(instance, binaryStatus, boatData);
@@ -220,7 +222,7 @@ void sendN2kSensorData() {
 void sendN2kAttitude() {
   tN2kMsg N2kMsg;
 
-  // Serial.print("Angle: R: ");Serial.print(boatData.attitude.roll);Serial.print("  P: ");Serial.print(boatData.attitude.pitch);Serial.print("  Y: ");Serial.println(boatData.attitude.yaw);
+  Serial.print("Angle: R: ");Serial.print(boatData.attitude.roll);Serial.print("  P: ");Serial.print(boatData.attitude.pitch);Serial.print("  Y: ");Serial.println(boatData.attitude.yaw);
 
   SetN2kAttitude(N2kMsg, 1, DegToRad(boatData.attitude.yaw), DegToRad(boatData.attitude.pitch), DegToRad(boatData.attitude.roll));
   NMEA2000.SendMsg(N2kMsg);
