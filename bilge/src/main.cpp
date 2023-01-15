@@ -113,6 +113,9 @@ void setupTimers() {
   timers[T_NEW_DEVICE].setInterval(12000, 1);
   timers[T_NEW_DEVICE].setCallback(newDevice);
 
+  timers[T_SYSTEM].setInterval(20041);
+  timers[T_SYSTEM].setCallback(sendN2kSystemStatus);
+
   timers[T_TEMPERATURE].setInterval(5007);
   timers[T_TEMPERATURE].setCallback(sendN2kSensorData);
 
@@ -134,8 +137,6 @@ void handleNMEA2000Msg(const tN2kMsg &N2kMsg) {
 void handleBinaryStatus(const tN2kMsg &N2kMsg) {
   unsigned char instance;
   tN2kBinaryStatus binaryStatus;
-
-  Serial.println("switches");
 
   if (ParseN2kBinaryStatus(N2kMsg, instance, binaryStatus) ) {
     boatDataFromBinaryStatus(instance, binaryStatus, boatData);
@@ -164,19 +165,24 @@ void handleThruster(const tN2kMsg &N2kMsg) {
 
     if (Power == N2kThrusterControlPower_On) {
       boatData.engines.bowThruster.power = N2kOnOff_On;
+      Serial.println("Thruster on");
 
       if (Direction == N2kThrusterControlDirection_ToPort) {
+        Serial.println("Thruster to Port");
         boatData.engines.bowThruster.toPort = N2kOnOff_On;
         boatData.engines.bowThruster.toStarboard = N2kOnOff_Off;
       } else if (Direction == N2kThrusterControlDirection_ToStarboard) {
+        Serial.println("Thruster to Starboard");
         boatData.engines.bowThruster.toPort = N2kOnOff_Off;
         boatData.engines.bowThruster.toStarboard = N2kOnOff_On;
       } else {
+        Serial.println("Thruster to Ready");
         boatData.engines.bowThruster.toPort = N2kOnOff_Off;
         boatData.engines.bowThruster.toStarboard = N2kOnOff_Off;
       }
 
     } else {
+      Serial.println("Thruster off");
       boatData.engines.bowThruster.power = N2kOnOff_Off;
       boatData.engines.bowThruster.toPort = N2kOnOff_Off;
       boatData.engines.bowThruster.toStarboard = N2kOnOff_Off;
@@ -207,7 +213,7 @@ void n2kBinaryStatus(SwitchBankInstance instance) {
 void sendN2kSystemStatus() {
   tN2kMsg N2kMsg;
 
-  SetN2kReflectionsResetCount(N2kMsg, 21, boatData.system.bridgeRestartCount);
+  SetN2kReflectionsResetCount(N2kMsg, 41, boatData.system.bridgeRestartCount);
   NMEA2000.SendMsg(N2kMsg);
 }
 

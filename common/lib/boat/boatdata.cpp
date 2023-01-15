@@ -71,6 +71,8 @@ uint64_t binaryStatusFromBoatData(unsigned char instance, BoatData boatData) {
     N2kSetStatusBinaryOnStatus(binaryStatus, boatData.utilities.wipers.starboard, offset++); // 8.4
     N2kSetStatusBinaryOnStatus(binaryStatus, boatData.utilities.cabinHeaterFan, offset++); // 8.5
     N2kSetStatusBinaryOnStatus(binaryStatus, boatData.utilities.fmRadio, offset++); // 8.6
+    N2kSetStatusBinaryOnStatus(binaryStatus, boatData.utilities.depthSounder, offset++); // 8.7
+    
 
   } else if (instance == E_UTILITIES_BILGE) {
     N2kSetStatusBinaryOnStatus(binaryStatus, boatData.utilities.blackwaterAirPump, offset++); // 9.1
@@ -153,6 +155,7 @@ void boatDataFromBinaryStatus(unsigned char instance, uint64_t binaryStatus, Boa
     boatData.utilities.wipers.starboard = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 8.4
     boatData.utilities.cabinHeaterFan = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 8.5
     boatData.utilities.fmRadio = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 8.6
+    boatData.utilities.depthSounder = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 8.7
 
   } else if (instance == E_UTILITIES_BILGE) {
     boatData.utilities.blackwaterAirPump = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 9.1

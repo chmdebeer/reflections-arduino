@@ -145,6 +145,7 @@ typedef struct {
   tN2kOnOff fmRadio;
   tN2kOnOff refrigerator;
   tN2kOnOff doorLock;
+  tN2kOnOff depthSounder;
 } Utilities;
 
 typedef struct {

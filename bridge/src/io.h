@@ -39,7 +39,7 @@
 #define O_RELAY_5 30
 #define O_RELAY_6 31
 #define O_RELAY_7 32
-#define O_RELAY_8 33
+#define O_DEPTH_SOUNDER 33
 
 #define I_BILGE_PUMP 34
 #define I_BILGE_BLOWER 35

@@ -42,16 +42,6 @@ enum debounce {
 
 Bounce * buttons = new Bounce[E_ITEMS];
 
-enum servo {
-  S_PORT_ENGINE_RPM,
-  S_PORT_ENGINE_OIL,
-  S_PORT_ENGINE_TEMPERATURE,
-  S_STARBOARD_ENGINE_RPM,
-  S_STARBOARD_ENGINE_OIL,
-  S_STARBOARD_ENGINE_TEMPERATURE,
-  S_ITEMS
-};
-
 void setupIO() {
 
   buttons[I_BOW_THRUSTER_ON].attach(I_PORT_START, INPUT_PULLUP);
@@ -117,10 +107,11 @@ void setupIO() {
   pinMode(O_RELAY_5, OUTPUT);
   pinMode(O_RELAY_6, OUTPUT);
   pinMode(O_RELAY_7, OUTPUT);
-  pinMode(O_RELAY_8, OUTPUT);
+  pinMode(O_DEPTH_SOUNDER, OUTPUT);
 
   pinMode(O_INSTRUMENT_LIGHTS, OUTPUT);
   pinMode(O_BATHROOM_LIGHTS, OUTPUT);
+  pinMode(O_BERTH_LIGHTS, OUTPUT);
   pinMode(O_MOSFET_4, OUTPUT);
 
 }
@@ -387,6 +378,8 @@ void setIO(BoatData &boatData, SwitchBankInstance instance) {
     // boatData.utilities.wipers.starboard // 8.4
     // boatData.utilities.cabinHeaterFan // 8.5
     // boatData.utilities.fmRadio // 8.6
+    digitalWrite(O_DEPTH_SOUNDER, (boatData.utilities.depthSounder == N2kOnOff_Off));
+
 
   } else if (instance == E_UTILITIES_BILGE) {
     // boatData.utilities.blackwaterAirPump // 9.1
@@ -419,7 +412,6 @@ void setIO(BoatData &boatData, SwitchBankInstance instance) {
   digitalWrite(O_RELAY_5, HIGH);
   digitalWrite(O_RELAY_6, HIGH);
   digitalWrite(O_RELAY_7, HIGH);
-  digitalWrite(O_RELAY_8, HIGH);
 
   digitalWrite(O_MOSFET_4, LOW);
 

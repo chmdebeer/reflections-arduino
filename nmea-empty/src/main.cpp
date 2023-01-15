@@ -316,6 +316,8 @@ void handleBinaryStatus(const tN2kMsg &N2kMsg) {
   unsigned char instance;
   tN2kBinaryStatus binaryStatus;
 
+  Serial.println("switches");
+
   if (ParseN2kBinaryStatus(N2kMsg, instance, binaryStatus) ) {
     Serial.println(instance);
     boatDataFromBinaryStatus(instance, binaryStatus, boatData);

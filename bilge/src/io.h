@@ -27,7 +27,7 @@
 #define O_MIDSHIP_BILGE 46
 #define O_BLACKWATER_AIR_PUMP 47 //relay 1 - 8
 
-#define I_ONE_WIRE_BUS 53
+#define I_ONE_WIRE_BUS 49
 #define I_MIDSHIP_BILGE A15
 
 void setupIO();
