@@ -1,3 +1,5 @@
+#define BOUNCE_WITH_PROMPT_DETECTION
+
 typedef struct {
   unsigned long PGN;
   void (*Handler)(const tN2kMsg &N2kMsg);
@@ -16,11 +18,9 @@ void n2kBinaryStatus(SwitchBankInstance instance);
 void sendN2kSystemStatus();
 
 void handleEngineRPM(const tN2kMsg &N2kMsg);
-void handleEngineDynamicParameters(const tN2kMsg &N2kMsg);
 
 void blinkBridgeStartLed();
-void handleFluidLevel(const tN2kMsg &N2kMsg);
-void sendN2kACStatus();
-void sendN2kGNSS();
 void sendN2kThruster();
 
+void sendN2kACStatus();
+void sendN2kGNSS();

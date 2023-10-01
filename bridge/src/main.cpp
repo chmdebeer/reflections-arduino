@@ -13,37 +13,32 @@
 #include <main.h>
 
 #include <Bounce2.h>
-#include <Time.h>
 #include <timer.h>
 #include <timerManager.h>
-#include <TinyGPS++.h>
 
 #include "utils.h"
 
 BoatData boatData;
 
 tNMEA2000Handler NMEA2000Handlers[]={
-  {127488L, &handleEngineRPM},
-  {127489L, &handleEngineDynamicParameters},
-  {127501L, &handleBinaryStatus},
   {59904L, &handleAddressClaim},
-  {127505L, &handleFluidLevel},
+  {127488L, &handleEngineRPM},
+  {127501L, &handleBinaryStatus},
   {0,0}
 };
+
+const unsigned long binaryStatusTransmitMessages[] PROGMEM={127501L,128006L,0};
 
 enum timers {
   T_NEW_DEVICE,
   T_SYSTEM,
   T_IGNITION_LED,
-  T_GNSS,
   T_AC,
 
   T_ITEMS
 };
 
 Timer * timers = new Timer[T_ITEMS];
-
-TinyGPSPlus gps;
 
 void setup() {
   unsigned char instance;
@@ -62,7 +57,6 @@ void setup() {
   readRestartCount();
 
   setupAC();
-
 }
 
 void loop() {
@@ -96,6 +90,7 @@ void setupNMEA() {
   // NMEA2000.EnableForward(false);
 
   NMEA2000.SetMode(tNMEA2000::N2km_ListenAndNode, 21);
+  NMEA2000.ExtendTransmitMessages(binaryStatusTransmitMessages);
 
   NMEA2000.SetMsgHandler(handleNMEA2000Msg);
 
@@ -116,8 +111,6 @@ void setupTimers() {
 
   timers[T_AC].setInterval(10007);
   timers[T_AC].setCallback(sendN2kACStatus);
-
-
 
   TimerManager::instance().start();
 }
@@ -157,9 +150,9 @@ void newDevice() {
 }
 
 void readRestartCount() {
-  EEPROM.get(0, boatData.system.bridgeRestartCount);
-  boatData.system.bridgeRestartCount++;
-  EEPROM.put(0, boatData.system.bridgeRestartCount);
+  EEPROM.get(0, boatData.system.restartCount);
+  boatData.system.restartCount++;
+  EEPROM.put(0, boatData.system.restartCount);
 }
 
 void n2kBinaryStatus(SwitchBankInstance instance) {
@@ -174,7 +167,7 @@ void n2kBinaryStatus(SwitchBankInstance instance) {
 void sendN2kSystemStatus() {
   tN2kMsg N2kMsg;
 
-  SetN2kReflectionsResetCount(N2kMsg, 21, boatData.system.bridgeRestartCount);
+  SetN2kReflectionsResetCount(N2kMsg, 21, boatData.system.restartCount);
   NMEA2000.SendMsg(N2kMsg);
 }
 
@@ -207,7 +200,6 @@ void sendN2kThruster() {
 
 }
 
-
 void handleEngineRPM(const tN2kMsg &N2kMsg) {
   unsigned char instance;
   // int servoValue;
@@ -230,50 +222,9 @@ void handleEngineRPM(const tN2kMsg &N2kMsg) {
   }
 }
 
-void handleEngineDynamicParameters(const tN2kMsg &N2kMsg) {
-  unsigned char EngineInstance;
-  double EngineOilPress;
-  double EngineOilTemp;
-  double EngineCoolantTemp;
-  double AltenatorVoltage;
-  double FuelRate;
-  double EngineHours;
-  double EngineCoolantPress;
-  double EngineFuelPress;
-  int8_t EngineLoad;
-  int8_t EngineTorque;
-
-  if (ParseN2kEngineDynamicParam(N2kMsg, EngineInstance, EngineOilPress, EngineOilTemp, EngineCoolantTemp,
-      AltenatorVoltage, FuelRate, EngineHours, EngineCoolantPress, EngineFuelPress, EngineLoad, EngineTorque) ) {
-    if (EngineInstance == 0) {
-      boatData.engines.port.oilPressure = EngineOilPress;
-      boatData.engines.port.waterTemperature = KelvinToC(EngineCoolantTemp);
-    } else if (EngineInstance == 1) {
-      boatData.engines.starboard.oilPressure = EngineOilPress;
-      boatData.engines.starboard.waterTemperature = KelvinToC(EngineCoolantTemp);
-    }
-  }
-}
-
 void blinkBridgeStartLed() {
   blinkStartLed(boatData, O_PORT_START, O_STARBOARD_START);
 }
-
-void handleFluidLevel(const tN2kMsg &N2kMsg) {
-    unsigned char instance;
-    tN2kFluidType fluidType;
-    double level=0;
-    double capacity=0;
-
-    if (ParseN2kFluidLevel(N2kMsg, instance, fluidType, level, capacity) ) {
-      if (fluidType == N2kft_Fuel) {
-        boatData.fuel.level = level;
-        boatData.fuel.capacity = capacity;
-    }
-  }
-}
-
-
 
 void sendN2kACStatus() {
   tN2kMsg N2kMsg;

@@ -23,14 +23,14 @@
 BoatData boatData;
 
 tNMEA2000Handler NMEA2000Handlers[]={
+  {59904L, &handleAddressClaim},
   {127501L, &handleBinaryStatus},
   {128006L, &handleThruster},
   {0,0}
 };
 
-const unsigned long binaryStatusTransmitMessages[] PROGMEM={127501L,0};
-const unsigned long attitudeTransmitMessages[] PROGMEM={127257L,0};
-const unsigned long temperatureMonitorTransmitMessages[] PROGMEM={130310L,130311L,130312L,0};
+//                                              attitude bin    temp    temp    temp
+const unsigned long transmitMessages[] PROGMEM={127257L,127501L,130310L,130311L,130312L,0};
 
 enum timers {
   T_NEW_DEVICE,
@@ -46,7 +46,6 @@ void setup() {
   unsigned char instance;
 
   Serial.begin(115200);
-  Serial.println("Starting  ");
 
   Serial1.begin(9600);
 
@@ -102,6 +101,8 @@ void setupNMEA() {
 
   NMEA2000.SetMode(tNMEA2000::N2km_ListenAndNode, 41);
 
+  NMEA2000.ExtendTransmitMessages(transmitMessages);
+
   NMEA2000.SetMsgHandler(handleNMEA2000Msg);
 
   NMEA2000.SetHeartbeatIntervalAndOffset(55000, 410);
@@ -148,6 +149,32 @@ void handleAddressClaim(const tN2kMsg &N2kMsg) {
   timers[T_NEW_DEVICE].start();
 }
 
+void newDevice() {
+  n2kBinaryStatus(E_BILGE_PUMPS);
+}
+
+void readRestartCount() {
+  EEPROM.get(0, boatData.system.restartCount);
+  boatData.system.restartCount++;
+  EEPROM.put(0, boatData.system.restartCount);
+}
+
+void n2kBinaryStatus(SwitchBankInstance instance) {
+  tN2kMsg N2kMsg;
+  tN2kBinaryStatus binaryStatus;
+
+  binaryStatus = binaryStatusFromBoatData(instance, boatData);
+  SetN2kBinaryStatus(N2kMsg, (unsigned char)instance, binaryStatus);
+  NMEA2000.SendMsg(N2kMsg);
+}
+
+void sendN2kSystemStatus() {
+  tN2kMsg N2kMsg;
+
+  SetN2kReflectionsResetCount(N2kMsg, 41, boatData.system.restartCount);
+  NMEA2000.SendMsg(N2kMsg);
+}
+
 void handleThruster(const tN2kMsg &N2kMsg) {
   unsigned char SID;
   unsigned char Identifier; 
@@ -189,32 +216,6 @@ void handleThruster(const tN2kMsg &N2kMsg) {
     }     
     setThruster(boatData);
   }
-}
-
-void newDevice() {
-  n2kBinaryStatus(E_BILGE_PUMPS);
-}
-
-void readRestartCount() {
-  EEPROM.get(0, boatData.system.bridgeRestartCount);
-  boatData.system.bridgeRestartCount++;
-  EEPROM.put(0, boatData.system.bridgeRestartCount);
-}
-
-void n2kBinaryStatus(SwitchBankInstance instance) {
-  tN2kMsg N2kMsg;
-  tN2kBinaryStatus binaryStatus;
-
-  binaryStatus = binaryStatusFromBoatData(instance, boatData);
-  SetN2kBinaryStatus(N2kMsg, (unsigned char)instance, binaryStatus);
-  NMEA2000.SendMsg(N2kMsg);
-}
-
-void sendN2kSystemStatus() {
-  tN2kMsg N2kMsg;
-
-  SetN2kReflectionsResetCount(N2kMsg, 41, boatData.system.bridgeRestartCount);
-  NMEA2000.SendMsg(N2kMsg);
 }
 
 void sendN2kSensorData() {

@@ -65,13 +65,13 @@ void setupIO() {
   pinMode(I_PORT_ENGINE_OIL, INPUT);
   pinMode(I_PORT_ENGINE_TEMP, INPUT);
   pinMode(I_PORT_DRIVE_TRIM, INPUT);
-  buttons[E_PORT_ENGINE_CHECK].attach(I_PORT_ENGINE_MALFUNCTION, INPUT_PULLUP);
+  buttons[E_PORT_ENGINE_MALFUNCTION].attach(I_PORT_ENGINE_MALFUNCTION, INPUT_PULLUP);
   buttons[E_PORT_ENGINE_CHECK].attach(I_PORT_ENGINE_CHECK, INPUT_PULLUP);
 
   pinMode(I_STARBOARD_ENGINE_OIL, INPUT);
   pinMode(I_STARBOARD_ENGINE_TEMP, INPUT);
   pinMode(I_STARBOARD_DRIVE_TRIM, INPUT);
-  buttons[E_STARBOARD_ENGINE_CHECK].attach(I_STARBOARD_ENGINE_MALFUNCTION, INPUT_PULLUP);
+  buttons[E_STARBOARD_ENGINE_MALFUNCTION].attach(I_STARBOARD_ENGINE_MALFUNCTION, INPUT_PULLUP);
   buttons[E_STARBOARD_ENGINE_CHECK].attach(I_STARBOARD_ENGINE_CHECK, INPUT_PULLUP);
 
   pinMode(I_FUEL, INPUT);
@@ -197,7 +197,7 @@ void setIO(BoatData &boatData, SwitchBankInstance instance) {
 
 void readSteering(BoatData &boatData) {
   double value;
-  value = readAtd(I_STEERING_ANGLE, 8, 198, 7854, -7854, 10000.0);
+  value = readAtd(I_STEERING_ANGLE, 0, 180, 7854, -7854, 10000.0);
   boatData.engines.port.steering = value;
 }
 
@@ -231,7 +231,7 @@ void readTemperatures(BoatData &boatData) {
 void readFuel(BoatData &boatData) {
   double value;
 
-  value = readAtd(I_FUEL, 33, 201, 0, 100, 1.0);
+  value = readAtd(I_FUEL, 0, 168, 0, 100, 1.0);
   boatData.fuel.level = value;
 }
 

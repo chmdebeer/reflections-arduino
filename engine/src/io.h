@@ -43,48 +43,48 @@
 
 #define O_TIP120_13 46
 
-#define I_ONE_WIRE_BUS 47
+#define I_ONE_WIRE_BUS 49
 
 //20
     // Port 12v
 //19
-#define I_PORT_ENGINE_OIL A14
+#define I_PORT_ENGINE_OIL A15
 //18
-#define I_PORT_ENGINE_TEMP A12
+#define I_PORT_ENGINE_TEMP A14
 //17
-#define I_PORT_DRIVE_TRIM A15
+#define I_PORT_DRIVE_TRIM A13
 //16
   // Vin
 //15
-#define I_STARBOARD_ENGINE_OIL A13
+#define I_STARBOARD_ENGINE_OIL A12
 //14
-#define I_STARBOARD_ENGINE_TEMP A9
+#define I_STARBOARD_ENGINE_TEMP A11
 //13
-#define I_STARBOARD_DRIVE_TRIM A7
+#define I_STARBOARD_DRIVE_TRIM A10
 //12
    // Starboard 12v
 //11
    //GND
 //10
-#define I_FUEL A0
+#define I_FUEL A9
 //09
-#define I_ENGINE_BILGE_PUMP A2
+#define I_ENGINE_BILGE_PUMP A7
 //08
-#define I_AUX_BATTERY A1
+#define I_AUX_BATTERY A6
 //07
-#define I_PORT_BATTERY A8
+#define I_PORT_BATTERY A5
 //06
-#define I_STARBOARD_BATTERY A10
+#define I_STARBOARD_BATTERY A4
 //05
-#define I_STEERING_ANGLE A11
+#define I_STEERING_ANGLE A8
 //04 yellow
-#define I_PORT_ENGINE_CHECK A5
+#define I_PORT_ENGINE_CHECK 10
 //03
-#define I_PORT_ENGINE_MALFUNCTION A6
+#define I_PORT_ENGINE_MALFUNCTION 11
 //02 yellow
-#define I_STARBOARD_ENGINE_CHECK A4
+#define I_STARBOARD_ENGINE_CHECK 12
 //01
-#define I_STARBOARD_ENGINE_MALFUNCTION A3
+#define I_STARBOARD_ENGINE_MALFUNCTION 13
 
 void setupIO();
 bool readIO(BoatData &boatData, SwitchBankInstance instance);

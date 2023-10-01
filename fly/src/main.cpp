@@ -1,10 +1,12 @@
 #include <Arduino.h>
+#include <EEPROM.h>
 #include <N2kTypes.h>
 #include "boatdata.h"
 #include "io.h"
 
 #include <NMEA2000_CAN.h>  // This will automatically choose right CAN library and create suitable NMEA2000 object
 #include <N2kMessages.h>
+#include <N2kReflections.h>
 #include <N2kMsg.h>
 #include <NMEA2000.h>
 
@@ -19,55 +21,54 @@
 BoatData boatData;
 
 tNMEA2000Handler NMEA2000Handlers[]={
+  {59904L, &handleAddressClaim},
   {127488L, &handleEngineRPM},
-  {127489L, &handleEngineDynamicParameters},
   {127501L, &handleBinaryStatus},
-  {127505L, &handleFluidLevel},
   {0,0}
 };
 
-const unsigned long binaryStatusTransmitMessages[] PROGMEM={127501L,0};
+const unsigned long binaryStatusTransmitMessages[] PROGMEM={127501L,128006L,0};
 
 enum timers {
+  T_NEW_DEVICE,
+  T_SYSTEM,
   T_IGNITION_LED,
+
   T_ITEMS
 };
 
 Timer * timers = new Timer[T_ITEMS];
 
-bool newN2kBinaryStatus = false;
-bool newN2kServoStatus = false;
-
 void setup() {
+  unsigned char instance;
+
   Serial.begin(115200);
+
   clearBoatData(boatData);
-  setIO(boatData);
+  for (instance=1; instance < (unsigned char)E_SWITCH_BANK_INSTANCES; instance++) {
+    setIO(boatData, (SwitchBankInstance)instance);
+  }
+
   setupIO();
   setupTimers();
   setupNMEA();
+
+  readRestartCount();
 }
 
 void loop() {
-  bool newIoBinaryStatus = false;
 
   NMEA2000.ParseMessages();
 
-  newIoBinaryStatus = readIO(boatData);
-
-  if (newIoBinaryStatus) {
-    sendN2kBinaryStatus();
-  }
-
-  if (newIoBinaryStatus || newN2kBinaryStatus) {
-    setIO(boatData);
-    printBoatData(boatData);
-    newN2kBinaryStatus = false;
-    newIoBinaryStatus = false;
-  }
-
-  if (newN2kServoStatus) {
-    setServos(boatData);
-    newN2kServoStatus = false;
+  for (int instance=1; instance < (unsigned char)E_SWITCH_BANK_INSTANCES; instance++) {
+    if (readIO(boatData, (SwitchBankInstance)instance)) {
+      setIO(boatData, (SwitchBankInstance)instance);
+      if (instance == (unsigned char)E_BOW_THRUSTER) {
+        sendN2kThruster();
+      } else {
+        n2kBinaryStatus((SwitchBankInstance)instance);
+      }
+    }
   }
 
   TimerManager::instance().update();
@@ -75,11 +76,9 @@ void loop() {
   if ( Serial.available() ) { Serial.read(); }
 }
 
-
 void setupNMEA() {
-  NMEA2000.SetProductInformation(
-    "10000301", 301, "Fly-Bridge", "3.0.1 (2019-05-26)", "3.0.1 (2019-05-26)"
-  );
+
+  NMEA2000.SetProductInformation("10000301", 301, "Fly-Bridge", "3.0.1 (2019-05-26)", "3.0.1 (2019-05-26)");
 
   NMEA2000.SetDeviceInformation(100301, 130, 30, 2041);
 
@@ -99,14 +98,16 @@ void setupNMEA() {
 }
 
 void setupTimers() {
+  timers[T_NEW_DEVICE].setInterval(12000, 1);
+  timers[T_NEW_DEVICE].setCallback(newDevice);
+
+  timers[T_SYSTEM].setInterval(20012);
+  timers[T_SYSTEM].setCallback(sendN2kSystemStatus);
+
   timers[T_IGNITION_LED].setInterval(500);
   timers[T_IGNITION_LED].setCallback(blinkBridgeStartLed);
 
   TimerManager::instance().start();
-}
-
-void blinkBridgeStartLed() {
-  blinkStartLed(boatData, O_PORT_START, O_STARBOARD_START);
 }
 
 void handleNMEA2000Msg(const tN2kMsg &N2kMsg) {
@@ -124,86 +125,99 @@ void handleBinaryStatus(const tN2kMsg &N2kMsg) {
 
   if (ParseN2kBinaryStatus(N2kMsg, instance, binaryStatus) ) {
     boatDataFromBinaryStatus(instance, binaryStatus, boatData);
-    newN2kBinaryStatus = true;
+    setIO(boatData, (SwitchBankInstance)instance);
   }
 }
 
+void handleAddressClaim(const tN2kMsg &N2kMsg) {
+  timers[T_NEW_DEVICE].start();
+}
+
+void newDevice() {
+  n2kBinaryStatus(E_IGNITION_START);
+  n2kBinaryStatus(E_POWER_TRIM);
+  n2kBinaryStatus(E_TRIM);
+  n2kBinaryStatus(E_LIGHTS);
+  n2kBinaryStatus(E_SPOTLIGHT);
+  n2kBinaryStatus(E_UTILITIES_CABIN);
+  n2kBinaryStatus(E_UTILITIES_BILGE);
+  n2kBinaryStatus(E_UTILITIES_ENGINE_ROOM);
+}
+
+void readRestartCount() {
+  EEPROM.get(0, boatData.system.bridgeRestartCount);
+  boatData.system.bridgeRestartCount++;
+  EEPROM.put(0, boatData.system.bridgeRestartCount);
+}
+
+void n2kBinaryStatus(SwitchBankInstance instance) {
+  tN2kMsg N2kMsg;
+  tN2kBinaryStatus binaryStatus;
+
+  binaryStatus = binaryStatusFromBoatData(instance, boatData);
+  SetN2kBinaryStatus(N2kMsg, (unsigned char)instance, binaryStatus);
+  NMEA2000.SendMsg(N2kMsg);
+}
+
+void sendN2kSystemStatus() {
+  tN2kMsg N2kMsg;
+
+  SetN2kReflectionsResetCount(N2kMsg, 31, boatData.system.bridgeRestartCount);
+  NMEA2000.SendMsg(N2kMsg);
+}
+
+void sendN2kThruster() {
+  tN2kMsg N2kMsg;
+  tN2kThrusterControlDirection direction;
+  tN2kThrusterControlPower power;
+
+  digitalWrite(O_BOW_THRUSTER_ON, (boatData.engines.bowThruster.power == N2kOnOff_On));
+  if (boatData.engines.bowThruster.power == N2kOnOff_On) {
+    power = N2kThrusterControlPower_On;
+
+    if (boatData.engines.bowThruster.toPort == N2kOnOff_On) {
+      direction = N2kThrusterControlDirection_ToPort;
+    } else if (boatData.engines.bowThruster.toStarboard == N2kOnOff_On) {
+      direction = N2kThrusterControlDirection_ToStarboard;
+    } else {
+      direction = N2kThrusterControlDirection_Off;
+    }
+  } else {
+    power = N2kThrusterControlPower_Off;
+    direction = N2kThrusterControlDirection_Off;
+  }
+
+  SetN2kPGN128006(N2kMsg, 11, 11, 
+    direction, power,
+    N2kThrusterControlRetract_Off, 1.0, N2kThrusterControlEventOtherDevice, 200, 0
+  );
+  NMEA2000.SendMsg(N2kMsg);
+
+}
+
 void handleEngineRPM(const tN2kMsg &N2kMsg) {
-  static int portEngineRpm = -1;
-  static int starboardEngineRpm = -1;
   unsigned char instance;
   // int servoValue;
   double rpm=0.0;
   double boost=0.0;
   int8_t trim=0;
 
+  // N2kMsg.Print(&Serial);
+
   if (ParseN2kEngineParamRapid(N2kMsg, instance, rpm, boost, trim) ) {
     if (instance == 0) {
-      boatData.engines.port.rpm = (int)rpm;
+      if (N2kMsg.Source == 1) {
+        boatData.engines.starboard.rpm = (int)rpm;
+      } else {
+        boatData.engines.port.rpm = (int)rpm;
+      }
     } else if (instance == 1) {
       boatData.engines.starboard.rpm = (int)rpm;
     }
-    if ((abs(portEngineRpm - boatData.engines.port.rpm) > 5) || (abs(starboardEngineRpm - boatData.engines.starboard.rpm) > 5)) {
-      portEngineRpm = boatData.engines.port.rpm;
-      starboardEngineRpm = boatData.engines.starboard.rpm;
-      newN2kServoStatus = true;
-    }
   }
 }
 
-void handleEngineDynamicParameters(const tN2kMsg &N2kMsg) {
-  unsigned char EngineInstance;
-  double EngineOilPress;
-  double EngineOilTemp;
-  double EngineCoolantTemp;
-  double AltenatorVoltage;
-  double FuelRate;
-  double EngineHours;
-  double EngineCoolantPress;
-  double EngineFuelPress;
-  int8_t EngineLoad;
-  int8_t EngineTorque;
-
-  if (ParseN2kEngineDynamicParam(N2kMsg, EngineInstance, EngineOilPress, EngineOilTemp, EngineCoolantTemp,
-      AltenatorVoltage, FuelRate, EngineHours, EngineCoolantPress, EngineFuelPress, EngineLoad, EngineTorque) ) {
-    if (EngineInstance == 0) {
-      boatData.engines.port.oilPressure = EngineOilPress;
-      boatData.engines.port.waterTemperature = KelvinToC(EngineCoolantTemp);
-    } else if (EngineInstance == 1) {
-      boatData.engines.starboard.oilPressure = EngineOilPress;
-      boatData.engines.starboard.waterTemperature = KelvinToC(EngineCoolantTemp);
-    }
-    newN2kServoStatus = true;
-  }
+void blinkBridgeStartLed() {
+  blinkStartLed(boatData, O_PORT_START, O_STARBOARD_START);
 }
 
-void handleFluidLevel(const tN2kMsg &N2kMsg) {
-    unsigned char instance;
-    tN2kFluidType fluidType;
-    double level=0;
-    double capacity=0;
-
-    if (ParseN2kFluidLevel(N2kMsg, instance, fluidType, level, capacity) ) {
-      if (fluidType == N2kft_Fuel) {
-        boatData.fuel.level = level;
-        boatData.fuel.capacity = capacity;
-        newN2kServoStatus = true;
-      }
-    }
-}
-
-void sendN2kBinaryStatus() {
-  tN2kMsg N2kMsg;
-  tN2kBinaryStatus binaryStatus_1;
-  tN2kBinaryStatus binaryStatus_2;
-
-  binaryStatus_1 = binaryStatusFromBoatData(1, boatData);
-  SetN2kBinaryStatus(N2kMsg, 1, binaryStatus_1);
-  NMEA2000.SendMsg(N2kMsg);
-
-  delay(N2K_DELAY_BETWEEN_SEND);
-
-  binaryStatus_2 = binaryStatusFromBoatData(2, boatData);
-  SetN2kBinaryStatus(N2kMsg, 2, binaryStatus_2);
-  NMEA2000.SendMsg(N2kMsg);
-}

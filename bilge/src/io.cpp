@@ -82,6 +82,7 @@ bool readIO(BoatData &boatData, SwitchBankInstance instance) {
       newIO = true;
       boatData.bilgePumps.midship.floatSwitch = N2kOnOff_Off;
     }
+    boatData.bilgePumps.midship.floatSwitch = N2kOnOff_Off;
   }
 
   return newIO;

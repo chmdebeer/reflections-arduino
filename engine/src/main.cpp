@@ -22,12 +22,15 @@
 BoatData boatData;
 
 tNMEA2000Handler NMEA2000Handlers[]={
+  {59904L, &handleAddressClaim},
   {127488L, &handleEngineRPM},
   {127489L, &handleEngineDynamicParameters},
   {127501L, &handleBinaryStatus},
-  {59904L, &handleAddressClaim},
   {0,0}
 };
+
+//                                              steer   bin    temp    temp    temp
+const unsigned long transmitMessages[] PROGMEM={127245L,127501L,130310L,130311L,130312L,0};
 
 enum timers {
   T_NEW_DEVICE,
@@ -70,6 +73,7 @@ void setup() {
 }
 
 void loop() {
+
   NMEA2000.ParseMessages();
 
   loopFrequency(boatData);
@@ -106,6 +110,8 @@ void setupNMEA() {
   // NMEA2000.EnableForward(false);
 
   NMEA2000.SetMode(tNMEA2000::N2km_ListenAndNode, 11);
+
+  NMEA2000.ExtendTransmitMessages(transmitMessages);
 
   NMEA2000.SetMsgHandler(handleNMEA2000Msg);
 
@@ -176,9 +182,9 @@ void newDevice() {
 }
 
 void readRestartCount() {
-  EEPROM.get(0, boatData.system.egnineRoomRestartCount);
-  boatData.system.egnineRoomRestartCount++;
-  EEPROM.put(0, boatData.system.egnineRoomRestartCount);
+  EEPROM.get(0, boatData.system.restartCount);
+  boatData.system.restartCount++;
+  EEPROM.put(0, boatData.system.roomRestartCount);
 }
 
 void n2kBinaryStatus(SwitchBankInstance instance) {
@@ -193,7 +199,7 @@ void n2kBinaryStatus(SwitchBankInstance instance) {
 void sendN2kSystemStatus() {
   tN2kMsg N2kMsg;
 
-  SetN2kReflectionsResetCount(N2kMsg, 11, boatData.system.egnineRoomRestartCount);
+  SetN2kReflectionsResetCount(N2kMsg, 11, boatData.system.restartCount);
   NMEA2000.SendMsg(N2kMsg);
 }
 

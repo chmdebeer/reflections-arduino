@@ -166,6 +166,7 @@ typedef struct {
 } Environment;
 
 typedef struct {
+  unsigned int restartCount;
   unsigned int bridgeRestartCount;
   unsigned int flybridgeRestartCount;
   unsigned int egnineRoomRestartCount;
