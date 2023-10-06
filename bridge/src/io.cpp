@@ -144,17 +144,17 @@ bool readIO(BoatData &boatData, SwitchBankInstance instance) {
     newIO |= readMomentaryButton(buttons[E_STARBOARD_DRIVE_BOW_UP], boatData.engines.starboard.trim.bowUp, true);
     newIO |= readMomentaryButton(buttons[E_STARBOARD_DRIVE_BOW_DOWN], boatData.engines.starboard.trim.bowDown, true);
 
-    newIO |= readMomentaryButton(buttons[E_DRIVE_BOW_UP], value, true);
-    if (value == N2kOnOff_On) {
-      boatData.engines.port.trim.bowUp = N2kOnOff_On;
-      boatData.engines.starboard.trim.bowUp = N2kOnOff_On;
-    }
+    // newIO |= readMomentaryButton(buttons[E_DRIVE_BOW_UP], value, true);
+    // if (value == N2kOnOff_On) {
+    //   boatData.engines.port.trim.bowUp = N2kOnOff_On;
+    //   boatData.engines.starboard.trim.bowUp = N2kOnOff_On;
+    // }
 
-    newIO |= readMomentaryButton(buttons[E_DRIVE_BOW_DOWN], value, true);
-    if (value == N2kOnOff_On) {
-      boatData.engines.port.trim.bowDown = N2kOnOff_On;
-      boatData.engines.starboard.trim.bowDown = N2kOnOff_On;
-    }
+    // newIO |= readMomentaryButton(buttons[E_DRIVE_BOW_DOWN], value, true);
+    // if (value == N2kOnOff_On) {
+    //   boatData.engines.port.trim.bowDown = N2kOnOff_On;
+    //   boatData.engines.starboard.trim.bowDown = N2kOnOff_On;
+    // }
 
   } else if (instance == E_TRIM) {
     // boatData.trim.port.bowUp // 4.1
@@ -166,17 +166,17 @@ bool readIO(BoatData &boatData, SwitchBankInstance instance) {
     newIO |= readMomentaryButton(buttons[E_STARBOARD_TRIM_BOW_UP], boatData.trim.starboard.bowUp, true);
     newIO |= readMomentaryButton(buttons[E_STARBOARD_TRIM_BOW_DOWN], boatData.trim.starboard.bowDown, true);
 
-    newIO |= readMomentaryButton(buttons[E_TRIM_BOW_UP], value, true);
-    if (value == N2kOnOff_On) {
-      boatData.trim.port.bowUp = N2kOnOff_On;
-      boatData.trim.starboard.bowUp = N2kOnOff_On;
-    }
+    // newIO |= readMomentaryButton(buttons[E_TRIM_BOW_UP], value, true);
+    // if (value == N2kOnOff_On) {
+    //   boatData.trim.port.bowUp = N2kOnOff_On;
+    //   boatData.trim.starboard.bowUp = N2kOnOff_On;
+    // }
 
-    newIO |= readMomentaryButton(buttons[E_TRIM_BOW_DOWN], value, true);
-    if (value == N2kOnOff_On) {
-      boatData.trim.port.bowDown = N2kOnOff_On;
-      boatData.trim.starboard.bowDown = N2kOnOff_On;
-    }
+    // newIO |= readMomentaryButton(buttons[E_TRIM_BOW_DOWN], value, true);
+    // if (value == N2kOnOff_On) {
+    //   boatData.trim.port.bowDown = N2kOnOff_On;
+    //   boatData.trim.starboard.bowDown = N2kOnOff_On;
+    // }
 
   } else if (instance == E_NUTRASALT) {
     // boatData.engines.port.nutraSalt // 5.1
@@ -193,6 +193,7 @@ bool readIO(BoatData &boatData, SwitchBankInstance instance) {
     // boatData.lights.anchor // 6.8
     // boatData.lights.navigation // 6.9
     // boatData.lights.stern // 6.10
+    // boatData.lights.flydeck // 6.10
     newIO |= readToggleButton(buttons[E_ENGINE_ROOM_LIGHTS], boatData.lights.engineRoom);
     newIO |= readToggleButton(buttons[E_CABIN_LIGHTS], boatData.lights.cabin);
 
@@ -355,6 +356,7 @@ void setIO(BoatData &boatData, SwitchBankInstance instance) {
     // boatData.lights.anchor // 6.8
     // boatData.lights.navigation // 6.9
     // boatData.lights.stern // 6.10
+    // boatData.lights.stern // 6.11
     digitalWrite(O_INSTRUMENT_LIGHTS, (boatData.lights.instruments == N2kOnOff_On));
     digitalWrite(O_BERTH_LIGHTS, (boatData.lights.berth == N2kOnOff_On));
     digitalWrite(O_BATHROOM_LIGHTS, (boatData.lights.head == N2kOnOff_On));

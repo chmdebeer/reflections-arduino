@@ -184,7 +184,7 @@ void newDevice() {
 void readRestartCount() {
   EEPROM.get(0, boatData.system.restartCount);
   boatData.system.restartCount++;
-  EEPROM.put(0, boatData.system.roomRestartCount);
+  EEPROM.put(0, boatData.system.restartCount);
 }
 
 void n2kBinaryStatus(SwitchBankInstance instance) {

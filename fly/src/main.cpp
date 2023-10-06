@@ -145,9 +145,9 @@ void newDevice() {
 }
 
 void readRestartCount() {
-  EEPROM.get(0, boatData.system.bridgeRestartCount);
-  boatData.system.bridgeRestartCount++;
-  EEPROM.put(0, boatData.system.bridgeRestartCount);
+  EEPROM.get(0, boatData.system.restartCount);
+  boatData.system.restartCount++;
+  EEPROM.put(0, boatData.system.restartCount);
 }
 
 void n2kBinaryStatus(SwitchBankInstance instance) {
@@ -162,7 +162,7 @@ void n2kBinaryStatus(SwitchBankInstance instance) {
 void sendN2kSystemStatus() {
   tN2kMsg N2kMsg;
 
-  SetN2kReflectionsResetCount(N2kMsg, 31, boatData.system.bridgeRestartCount);
+  SetN2kReflectionsResetCount(N2kMsg, 31, boatData.system.restartCount);
   NMEA2000.SendMsg(N2kMsg);
 }
 

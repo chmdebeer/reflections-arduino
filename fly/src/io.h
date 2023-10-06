@@ -5,7 +5,7 @@
 #define N2k_SPI_CS_PIN 48
 
 #define O_INSTRUMENT_LIGHTS 3
-#define O_MOSFET_3 4
+#define O_FLYDECK_LIGHT 4
 #define O_MOSFET_2 5
 #define O_MOSFET_1 6
 

@@ -87,7 +87,7 @@ void setupIO() {
 
   pinMode(O_MOSFET_1, OUTPUT);
   pinMode(O_MOSFET_2, OUTPUT);
-  pinMode(O_MOSFET_3, OUTPUT);
+  pinMode(O_FLYDECK_LIGHT, OUTPUT);
   pinMode(O_INSTRUMENT_LIGHTS, OUTPUT);
 
 }
@@ -120,17 +120,17 @@ bool readIO(BoatData &boatData, SwitchBankInstance instance) {
     newIO |= readMomentaryButton(buttons[E_STARBOARD_DRIVE_BOW_UP], boatData.engines.starboard.trim.bowUp, true);
     newIO |= readMomentaryButton(buttons[E_STARBOARD_DRIVE_BOW_DOWN], boatData.engines.starboard.trim.bowDown, true);
 
-    newIO |= readMomentaryButton(buttons[E_DRIVE_BOW_UP], value, true);
-    if (value == N2kOnOff_On) {
-      boatData.engines.port.trim.bowUp = N2kOnOff_On;
-      boatData.engines.starboard.trim.bowUp = N2kOnOff_On;
-    }
+    // newIO |= readMomentaryButton(buttons[E_DRIVE_BOW_UP], value, true);
+    // if (value == N2kOnOff_On) {
+    //   boatData.engines.port.trim.bowUp = N2kOnOff_On;
+    //   boatData.engines.starboard.trim.bowUp = N2kOnOff_On;
+    // }
 
-    newIO |= readMomentaryButton(buttons[E_DRIVE_BOW_DOWN], value, true);
-    if (value == N2kOnOff_On) {
-      boatData.engines.port.trim.bowDown = N2kOnOff_On;
-      boatData.engines.starboard.trim.bowDown = N2kOnOff_On;
-    }
+    // newIO |= readMomentaryButton(buttons[E_DRIVE_BOW_DOWN], value, true);
+    // if (value == N2kOnOff_On) {
+    //   boatData.engines.port.trim.bowDown = N2kOnOff_On;
+    //   boatData.engines.starboard.trim.bowDown = N2kOnOff_On;
+    // }
 
   } else if (instance == E_TRIM) {
     // boatData.trim.port.bowUp // 4.1
@@ -142,17 +142,17 @@ bool readIO(BoatData &boatData, SwitchBankInstance instance) {
     newIO |= readMomentaryButton(buttons[E_STARBOARD_TRIM_BOW_UP], boatData.trim.starboard.bowUp, true);
     newIO |= readMomentaryButton(buttons[E_STARBOARD_TRIM_BOW_DOWN], boatData.trim.starboard.bowDown, true);
 
-    newIO |= readMomentaryButton(buttons[E_TRIM_BOW_UP], value, true);
-    if (value == N2kOnOff_On) {
-      boatData.trim.port.bowUp = N2kOnOff_On;
-      boatData.trim.starboard.bowUp = N2kOnOff_On;
-    }
+    // newIO |= readMomentaryButton(buttons[E_TRIM_BOW_UP], value, true);
+    // if (value == N2kOnOff_On) {
+    //   boatData.trim.port.bowUp = N2kOnOff_On;
+    //   boatData.trim.starboard.bowUp = N2kOnOff_On;
+    // }
 
-    newIO |= readMomentaryButton(buttons[E_TRIM_BOW_DOWN], value, true);
-    if (value == N2kOnOff_On) {
-      boatData.trim.port.bowDown = N2kOnOff_On;
-      boatData.trim.starboard.bowDown = N2kOnOff_On;
-    }
+    // newIO |= readMomentaryButton(buttons[E_TRIM_BOW_DOWN], value, true);
+    // if (value == N2kOnOff_On) {
+    //   boatData.trim.port.bowDown = N2kOnOff_On;
+    //   boatData.trim.starboard.bowDown = N2kOnOff_On;
+    // }
 
   } else if (instance == E_NUTRASALT) {
     // boatData.engines.port.nutraSalt // 5.1
@@ -213,19 +213,26 @@ bool readIO(BoatData &boatData, SwitchBankInstance instance) {
 }
 
 void setIO(BoatData &boatData, SwitchBankInstance instance) {
-  digitalWrite(O_RELAY_4, HIGH);
-  digitalWrite(O_RELAY_3, HIGH);
-  digitalWrite(O_RELAY_2, HIGH);
-  digitalWrite(O_MOSFET_1, LOW);
-  digitalWrite(O_MOSFET_2, LOW);
-  digitalWrite(O_MOSFET_3, LOW);
+  if (instance == E_LIGHTS) {
+    // boatData.lights.instruments // 6.1
+    // boatData.lights.cabin // 6.2
+    // boatData.lights.berth // 6.3
+    // boatData.lights.head // 6.4
+    // boatData.lights.aftDeck // 6.5
+    // boatData.lights.belowDeck // 6.6
+    // boatData.lights.engineRoom // 6.7
+    // boatData.lights.anchor // 6.8
+    // boatData.lights.navigation // 6.9
+    // boatData.lights.stern // 6.10
+    // boatData.lights.stern // 6.11
+    digitalWrite(O_NAVIGATION_LIGHTS, !(boatData.lights.navigation == N2kOnOff_On));
+    digitalWrite(O_ANCHOR_LIGHTS, !(boatData.lights.anchor == N2kOnOff_On));
 
-  digitalWrite(O_NAVIGATION_LIGHTS, !(boatData.lights.navigation == N2kOnOff_On));
-  digitalWrite(O_ANCHOR_LIGHTS, !(boatData.lights.anchor == N2kOnOff_On));
+    digitalWrite(O_INSTRUMENT_LIGHTS, boatData.lights.instruments == N2kOnOff_On);
+    digitalWrite(O_FLYDECK_LIGHT, boatData.lights.flydeck == N2kOnOff_On);
 
-  digitalWrite(O_INSTRUMENT_LIGHTS, boatData.lights.instruments == N2kOnOff_On);
-
-  digitalWrite(O_HORN_ONE, !(boatData.utilities.horn.one == N2kOnOff_On));
-  digitalWrite(O_HORN_TWO, !(boatData.utilities.horn.two == N2kOnOff_On));
+    digitalWrite(O_HORN_ONE, !(boatData.utilities.horn.one == N2kOnOff_On));
+    digitalWrite(O_HORN_TWO, !(boatData.utilities.horn.two == N2kOnOff_On));
+  }
 }
 

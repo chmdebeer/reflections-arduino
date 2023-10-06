@@ -51,6 +51,7 @@ void setup() {
   }
 
   setupIO();
+
   setupTimers();
   setupNMEA();
 

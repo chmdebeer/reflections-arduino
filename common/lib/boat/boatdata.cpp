@@ -54,6 +54,7 @@ uint64_t binaryStatusFromBoatData(unsigned char instance, BoatData boatData) {
     N2kSetStatusBinaryOnStatus(binaryStatus, boatData.lights.anchor, offset++); // 6.8
     N2kSetStatusBinaryOnStatus(binaryStatus, boatData.lights.navigation, offset++); // 6.9
     N2kSetStatusBinaryOnStatus(binaryStatus, boatData.lights.stern, offset++); // 6.10
+    N2kSetStatusBinaryOnStatus(binaryStatus, boatData.lights.flydeck, offset++); // 6.11
 
   } else if (instance == E_SPOTLIGHT) {
     N2kSetStatusBinaryOnStatus(binaryStatus, boatData.lights.spotlight.fog, offset++); // 7.1
@@ -138,6 +139,7 @@ void boatDataFromBinaryStatus(unsigned char instance, uint64_t binaryStatus, Boa
     boatData.lights.anchor = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 6.8
     boatData.lights.navigation = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 6.9
     boatData.lights.stern = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 6.10
+    boatData.lights.flydeck = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 6.11
 
   } else if (instance == E_SPOTLIGHT) {
     boatData.lights.spotlight.fog = N2kGetStatusOnBinaryStatus(binaryStatus, offset++); // 7.1

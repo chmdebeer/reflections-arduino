@@ -117,6 +117,7 @@ typedef struct {
   tN2kOnOff navigation;
   Spotlight spotlight;
   tN2kOnOff stern;
+  tN2kOnOff flydeck;
   unsigned char cabinIntensity;
   unsigned char berthIntensity;
   unsigned char headIntensity;
