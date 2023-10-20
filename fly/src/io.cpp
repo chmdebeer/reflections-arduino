@@ -84,11 +84,17 @@ void setupIO() {
   pinMode(O_RELAY_3, OUTPUT);
   pinMode(O_RELAY_2, OUTPUT);
   pinMode(O_RELAY_1, OUTPUT);
+  digitalWrite(O_RELAY_4, HIGH);
+  digitalWrite(O_RELAY_3, HIGH);
+  digitalWrite(O_RELAY_2, HIGH);
+  digitalWrite(O_RELAY_1, HIGH);
 
   pinMode(O_MOSFET_1, OUTPUT);
   pinMode(O_MOSFET_2, OUTPUT);
   pinMode(O_FLYDECK_LIGHT, OUTPUT);
   pinMode(O_INSTRUMENT_LIGHTS, OUTPUT);
+  digitalWrite(O_MOSFET_1, LOW);
+  digitalWrite(O_MOSFET_2, LOW);
 
 }
 
@@ -230,9 +236,11 @@ void setIO(BoatData &boatData, SwitchBankInstance instance) {
 
     digitalWrite(O_INSTRUMENT_LIGHTS, boatData.lights.instruments == N2kOnOff_On);
     digitalWrite(O_FLYDECK_LIGHT, boatData.lights.flydeck == N2kOnOff_On);
-
+  }
+  if (instance == E_UTILITIES_CABIN) {
     digitalWrite(O_HORN_ONE, !(boatData.utilities.horn.one == N2kOnOff_On));
     digitalWrite(O_HORN_TWO, !(boatData.utilities.horn.two == N2kOnOff_On));
   }
+  
 }
 

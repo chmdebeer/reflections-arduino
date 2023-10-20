@@ -54,7 +54,7 @@ void KASAUtil::closeSock(int sock)
 {
     if (sock != -1)
     {
-        ESP_LOGE(TAG, "Shutting down socket and restarting...");
+        // ESP_LOGE(TAG, "Shutting down socket and restarting...");
         shutdown(sock, 0);
         close(sock);
     }
@@ -108,7 +108,7 @@ int KASAUtil::ScanDevices(int timeoutMs)
 
     if (sock < 0)
     {
-        ESP_LOGE(TAG, "Unable to create socket: errno %d", errno);
+        // ESP_LOGE(TAG, "Unable to create socket: errno %d", errno);
         retValue = -1;
         closeSock(sock);
         return retValue;
@@ -117,7 +117,7 @@ int KASAUtil::ScanDevices(int timeoutMs)
     ret = setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &boardCaseEnable, sizeof(boardCaseEnable));
     if (ret < 0)
     {
-        ESP_LOGE(TAG, "Unable to set broadcase option %d", errno);
+        // ESP_LOGE(TAG, "Unable to set broadcase option %d", errno);
         retValue = -2;
         closeSock(sock);
         return retValue;
@@ -126,7 +126,7 @@ int KASAUtil::ScanDevices(int timeoutMs)
     len = KASAUtil::Encrypt(get_kasa_info, len, 0, sendbuf);
     if (len > sizeof(sendbuf))
     {
-        ESP_LOGE(TAG, "Overflowed multicast sendfmt buffer!!");
+        // ESP_LOGE(TAG, "Overflowed multicast sendfmt buffer!!");
 
         retValue = -3;
         closeSock(sock);
@@ -134,12 +134,12 @@ int KASAUtil::ScanDevices(int timeoutMs)
     }
 
     // Sending the first broadcase message out..
-    ESP_LOGI(TAG, "Send Query Message length  %s %d", get_kasa_info, len);
+    // ESP_LOGI(TAG, "Send Query Message length  %s %d", get_kasa_info, len);
 
     err = sendto(sock, sendbuf, len, 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
     if (err < 0)
     {
-        ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
+        // ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
         closeSock(sock);
         return -4;
     }
@@ -163,7 +163,7 @@ int KASAUtil::ScanDevices(int timeoutMs)
 
         if (s < 0)
         {
-            ESP_LOGE(TAG, "Select failed: errno %d", errno);
+            // ESP_LOGE(TAG, "Select failed: errno %d", errno);
             err = -1;
             break;
         }
@@ -182,7 +182,7 @@ int KASAUtil::ScanDevices(int timeoutMs)
                                    (struct sockaddr *)&raddr, &socklen);
                 if (len < 0)
                 {
-                    ESP_LOGE(TAG, "multicast recvfrom failed: errno %d", errno);
+                    // ESP_LOGE(TAG, "multicast recvfrom failed: errno %d", errno);
                     err = -1;
                     break;
                 }
@@ -305,7 +305,7 @@ int KASAUtil::ScanDevices(int timeoutMs)
                 err = sendto(sock, sendbuf, len, 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
                 if (err < 0)
                 {
-                    ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
+                    // ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
                     retValue = -5;
                 }
                 Serial.println("Query Message sent");
@@ -319,7 +319,7 @@ int KASAUtil::ScanDevices(int timeoutMs)
             err = sendto(sock, sendbuf, len, 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
             if (err < 0)
             {
-                ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
+                // ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
                 retValue = -1;
                 closeSock(sock);
                 return retValue;

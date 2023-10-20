@@ -15,7 +15,7 @@
 #define O_NAVIGATION_LIGHTS 10
 #define O_ANCHOR_LIGHTS 11
 #define O_ENGINE_ROOM_LIGHTS 12
-#define O_ACCESSORIES_RADIO 13
+#define O_DEPTH_SOUNDER_LIGHT 13
 
 #define NA_14 14
 #define NA_15 15
@@ -38,8 +38,8 @@
 #define O_RELAY_4 29
 #define O_RELAY_5 30
 #define O_RELAY_6 31
-#define O_RELAY_7 32
-#define O_DEPTH_SOUNDER 33
+#define O_DEPTH_SOUNDER 32
+#define O_RELAY_7 33
 
 #define I_BILGE_PUMP 34
 #define I_BILGE_BLOWER 35
@@ -62,7 +62,7 @@
 #define I_ONE_WIRE_BUS 49
 
 #define I_HORN A15
-#define I_ROCM_RADIO A14
+#define I_DEPTH_SOUNDER A14
 #define I_WINDOW_WIPERS A13
 #define I_CABIN_LIGHTS A12
 #define I_FM_RADIO A11

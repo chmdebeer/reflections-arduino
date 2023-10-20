@@ -36,6 +36,7 @@ enum debounce {
   E_WATER_PUMP,
   E_ROCM_RADIO,
   E_FM_RADIO,
+  E_DEPTH_SOUNDER,
   E_REFRIGERATOR,
   E_ITEMS
 };
@@ -82,8 +83,9 @@ void setupIO() {
   buttons[E_CABIN_LIGHTS].attach(I_CABIN_LIGHTS, INPUT_PULLUP);
 
   buttons[E_WATER_PUMP].attach(I_WATER_PUMP, INPUT_PULLUP);
-  buttons[E_ROCM_RADIO].attach(I_ROCM_RADIO, INPUT_PULLUP);
+  buttons[E_ROCM_RADIO].attach(I_DEPTH_SOUNDER, INPUT_PULLUP);
   buttons[E_FM_RADIO].attach(I_FM_RADIO, INPUT_PULLUP);
+  buttons[E_DEPTH_SOUNDER].attach(I_DEPTH_SOUNDER, INPUT_PULLUP);
   buttons[E_REFRIGERATOR].attach(I_REFRIGERATOR, INPUT_PULLUP);
   buttons[E_SPOT_LIGHT].attach(I_SPOT_LIGHT, INPUT_PULLUP);
 
@@ -95,7 +97,7 @@ void setupIO() {
 
   pinMode(O_BILGE_PUMP, OUTPUT);
   pinMode(O_ENGINE_ROOM_LIGHTS, OUTPUT);
-  pinMode(O_ACCESSORIES_RADIO, OUTPUT);
+  pinMode(O_DEPTH_SOUNDER_LIGHT, OUTPUT);
   pinMode(O_BILGE_BLOWER, OUTPUT);
   pinMode(O_NAVIGATION_LIGHTS, OUTPUT);
   pinMode(O_ANCHOR_LIGHTS, OUTPUT);
@@ -249,6 +251,7 @@ bool readIO(BoatData &boatData, SwitchBankInstance instance) {
     // boatData.utilities.wipers.starboard // 8.4
     // boatData.utilities.cabinHeaterFan // 8.5
     // boatData.utilities.fmRadio // 8.6
+    // boatData.utilities.depthSounder // 8.7
 
     newIO |= readToggleButton(buttons[E_FM_RADIO], boatData.utilities.fmRadio);
 
@@ -275,6 +278,9 @@ bool readIO(BoatData &boatData, SwitchBankInstance instance) {
         boatData.utilities.wipers.starboard = N2kOnOff_Off;
       }
     }
+
+    newIO |= readToggleButton(buttons[E_DEPTH_SOUNDER], boatData.utilities.depthSounder);
+
 
   } else if (instance == E_UTILITIES_BILGE) {
     // boatData.utilities.blackwaterAirPump // 9.1
@@ -381,6 +387,7 @@ void setIO(BoatData &boatData, SwitchBankInstance instance) {
     // boatData.utilities.cabinHeaterFan // 8.5
     // boatData.utilities.fmRadio // 8.6
     digitalWrite(O_DEPTH_SOUNDER, (boatData.utilities.depthSounder == N2kOnOff_Off));
+    digitalWrite(O_DEPTH_SOUNDER_LIGHT, (boatData.utilities.depthSounder == N2kOnOff_On));
 
 
   } else if (instance == E_UTILITIES_BILGE) {
